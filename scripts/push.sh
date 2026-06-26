@@ -25,10 +25,13 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! docker-credential-desktop list 2>/dev/null | grep -q 'index.docker.io'; then
-  echo "Run: docker login" >&2
-  echo "Push to qaguru/playwright-* requires write access to the Docker Hub namespace." >&2
-  exit 1
+# Local Docker Desktop check only; CI authenticates via docker/login-action.
+if [[ -z "${CI:-}" ]] && command -v docker-credential-desktop >/dev/null 2>&1; then
+  if ! docker-credential-desktop list 2>/dev/null | grep -q 'index.docker.io'; then
+    echo "Run: docker login" >&2
+    echo "Push to qaguru/playwright-* requires write access to the Docker Hub namespace." >&2
+    exit 1
+  fi
 fi
 
 if ! docker buildx inspect "${BUILDER}" >/dev/null 2>&1; then
