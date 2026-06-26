@@ -22,6 +22,8 @@ RUN apt-get update \
         x11vnc \
         xvfb \
     && npm install -g "playwright-core@${PLAYWRIGHT_VERSION}" \
+    && npx playwright install --with-deps chrome \
+    && test -x /opt/google/chrome/chrome \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/playwright /tmp/.X11-unix \
