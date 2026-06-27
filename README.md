@@ -4,7 +4,12 @@ Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/q
 
 [![Publish](https://github.com/qa-guru/playwright-image/workflows/publish/badge.svg)](https://github.com/qa-guru/playwright-image/actions?query=workflow%3Apublish)
 [![Release](https://img.shields.io/github/release/qa-guru/playwright-image.svg)](https://github.com/qa-guru/playwright-image/releases/latest)
-[![Docker Pulls](https://img.shields.io/docker/pulls/qaguru/playwright-chromium.svg)](https://hub.docker.com/r/qaguru/playwright-chromium)
+
+[![Docker Pulls Chromium](https://img.shields.io/docker/pulls/qaguru/playwright-chromium.svg?label=chromium)](https://hub.docker.com/r/qaguru/playwright-chromium)
+[![Docker Pulls Firefox](https://img.shields.io/docker/pulls/qaguru/playwright-firefox.svg?label=firefox)](https://hub.docker.com/r/qaguru/playwright-firefox)
+[![Docker Pulls WebKit](https://img.shields.io/docker/pulls/qaguru/playwright-webkit.svg?label=webkit)](https://hub.docker.com/r/qaguru/playwright-webkit)
+[![Docker Pulls Chrome](https://img.shields.io/docker/pulls/qaguru/playwright-chrome.svg?label=chrome)](https://hub.docker.com/r/qaguru/playwright-chrome)
+[![Docker Pulls Edge](https://img.shields.io/docker/pulls/qaguru/playwright-msedge.svg?label=msedge)](https://hub.docker.com/r/qaguru/playwright-msedge)
 
 | | |
 |---|---|
