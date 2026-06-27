@@ -54,6 +54,60 @@ WebDriver Chrome/Firefox — другие образы ([twilio/selenoid](https:
 
 ---
 
+## Сравнение с Selenium-образами (WebDriver)
+
+В hub [два независимых стека](https://github.com/qa-guru/selenoid/blob/main/docs/browser-versions.md). Поле `version` в `browsers.json` для них означает разное:
+
+| | Playwright (`qaguru/playwright-*`) | WebDriver (`twilio/selenoid`) |
+|---|---|---|
+| **Протокол** | WebSocket `/playwright/...` | HTTP `POST /wd/hub/session` |
+| **Что означает версия** | npm `@playwright/test` (`1.61.1`) | мажор браузера (`148.0` → Chrome 148.x) |
+| **Клиент** | Playwright / `@playwright/test` | Selenium WebDriver |
+| **Образы** | этот репозиторий | [twilio/selenoid](https://hub.docker.com/r/twilio/selenoid), здесь не собираются |
+
+### Движки при версиях по умолчанию
+
+Актуально для [`config/browsers.json`](https://github.com/qa-guru/selenoid/blob/main/config/browsers.json) (июнь 2026).
+
+| Браузер | Playwright в hub | Движок в контейнере | WebDriver в hub | Docker-тег Twilio |
+|---|---|---|---|---|
+| Chromium | `playwright-chromium` **1.61.1** | Chromium **149** | `chrome` **148.0** | `twilio/selenoid:chrome_stable_148` |
+| Google Chrome | `playwright-chrome` **1.61.1** | stable channel | — | — |
+| Firefox | `playwright-firefox` **1.61.1** | Firefox **151** | `firefox` **150.0** | `twilio/selenoid:firefox_stable_150` |
+| Microsoft Edge | `playwright-msedge` **1.61.1** | stable channel | `msedge` **145.0** | `twilio/selenoid:edge_stable_145` |
+| WebKit | `playwright-webkit` **1.61.1** | WebKit **26.5** | — | — |
+
+> Playwright **1.61.x** и WebDriver Chrome **148** / Firefox **150** — почти на одном уровне по мажору. Стеки **нельзя** подменять: `chrome:148.0` ≠ `playwright-chromium:1.61.1`.
+
+### Матрица версий в `browsers.json`
+
+| Имя в hub | Default | Версии в конфиге | Docker-образ |
+|---|---|---|---|
+| `playwright-chromium` | `1.61.1` | 1.61.1, 1.61.0, 1.60.0, 1.46.0 | `qaguru/playwright-chromium:<версия>` |
+| `playwright-firefox` | `1.61.1` | 1.61.1, 1.61.0, 1.60.0 | `qaguru/playwright-firefox:<версия>` |
+| `playwright-webkit` | `1.61.1` | 1.61.1, 1.61.0, 1.60.0 | `qaguru/playwright-webkit:<версия>` |
+| `playwright-chrome` | `1.61.1` | 1.61.1, 1.61.0, 1.60.0 | `qaguru/playwright-chrome:<версия>` |
+| `playwright-msedge` | `1.61.1` | 1.61.1, 1.61.0, 1.60.0 | `qaguru/playwright-msedge:<версия>` |
+| `chrome` | `148.0` | 148.0, 147.0, 146.0, 128.0 | `twilio/selenoid:chrome_stable_<N>` |
+| `firefox` | `150.0` | 150.0, 149.0, 148.0 | `twilio/selenoid:firefox_stable_<N>` |
+| `msedge` | `145.0` | 145.0, 144.0, 143.0 | `twilio/selenoid:edge_stable_<N>` |
+
+### Движки внутри Playwright-образов
+
+Данные из [официального `browsers.json` Playwright](https://github.com/microsoft/playwright/blob/main/packages/playwright-core/browsers.json).
+
+| Playwright | Chromium | Firefox | WebKit | WebDriver Chrome | WebDriver Firefox |
+|---|---|---|---|---|---|
+| **1.61.1** *(default)* | 149.0.7827.55 | 151.0 | 26.5 | 148.0 | 150.0 |
+| 1.61.0 | 149.0.7827.55 | 151.0 | 26.5 | — | — |
+| 1.60.0 | 148.0.7778.96 | 150.0.2 | 26.4 | 148.0 | — |
+
+Версия npm-клиента **должна совпадать** с `playwrightVersion` и версией в URL (`/playwright/playwright-chromium/1.61.1` → `@playwright/test@1.61.1`).
+
+Полная матрица совместимости, правила клиента и команды `docker pull` — в [browser-versions.md](https://github.com/qa-guru/selenoid/blob/main/docs/browser-versions.md) (qa-guru/selenoid).
+
+---
+
 ## Структура репозитория
 
 ```
