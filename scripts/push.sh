@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WARM_API_SRC="${ROOT}/../warm-pool-orchestrator/warm-api"
 BROWSER="${1:-}"
 VERSION="${2:-1.61.1}"
 VARIANT="${3:-}"
@@ -54,15 +53,6 @@ else
   docker buildx use "${BUILDER}"
 fi
 
-stage_warm_api() {
-  if [[ ! -d "${WARM_API_SRC}" ]]; then
-    echo "warm-api not found at ${WARM_API_SRC}" >&2
-    exit 1
-  fi
-  rm -rf "${ROOT}/warm-api"
-  cp -R "${WARM_API_SRC}" "${ROOT}/warm-api"
-}
-
 push_one() {
   local browser="$1"
   local variant="${2:-}"
@@ -75,8 +65,6 @@ push_one() {
   if [[ "${variant}" == "min" ]]; then
     dockerfile="${ROOT}/playwright-${browser}/Dockerfile.min.scratch"
     tag="${image}:${PW_PACKAGE}-min"
-  else
-    stage_warm_api
   fi
 
   if [[ "${browser}" == "chrome" || "${browser}" == "msedge" ]]; then
@@ -93,7 +81,6 @@ push_one() {
     "${context}"
 
   echo "Pushed ${tag} for ${platforms}"
-  rm -rf "${ROOT}/warm-api"
 }
 
 if [[ "${BROWSER}" == "all" ]]; then
