@@ -61,3 +61,31 @@ jobs:
           else
             ./playwright/scripts/push.sh "${BROWSER}" "${VERSION}"
           fi
+
+  trigger-selenoid-tests:
+    name: Trigger selenoid-tests (playwright)
+    needs: docker
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger selenoid-tests smoke
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+          repository: qa-guru/selenoid-tests
+          event-type: deploy-smoke
+          client-payload: >-
+            {"source_repo":"${{ github.repository }}",
+             "source_ref":"${{ github.ref }}",
+             "source_version":"${{ steps.version.outputs.version }}",
+             "source_variant":"playwright",
+             "test_tags":"playwright"}
