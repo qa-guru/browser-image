@@ -27,21 +27,7 @@ Playwright test  ──►  selenoid hub  ──►  qaguru/playwright-chromium:
                                               (этот репозиторий)
 ```
 
-WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome`). Firefox и Edge в Selenium-стеке не публикуются — используйте `playwright-firefox` / `playwright-msedge`.
-
-### Warm pool mode (feature branch)
-
-Образы с `WARM_ENABLED=true` поднимают warm API на `:8080` (общий контракт с `webdriver/`):
-
-```bash
-curl -sf http://127.0.0.1:8080/warm/goto \
-  -H 'Content-Type: application/json' \
-  -d '{"url":"https://example.com/login.html"}'
-curl -sf -X POST http://127.0.0.1:8080/warm/video/start \
-  -d '{"sessionId":"pool-pw-chromium-1"}'
-```
-
-Playwright WS остаётся на `:3000`. Orchestrator проксирует preopen/video — см. [warm-pool-orchestrator/README.md](../warm-pool-orchestrator/README.md).
+WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-min`). Firefox и Edge в Selenium-стеке не публикуются — используйте `playwright-firefox` / `playwright-msedge`.
 
 ## Связанные репозитории
 

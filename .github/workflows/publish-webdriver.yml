@@ -3,20 +3,9 @@ name: publish-webdriver
 on:
   push:
     tags:
-      - "webdriver/chrome-[0-9]+"
       - "webdriver/chrome-[0-9]+-min"
-      - "chrome-[0-9]+"
       - "chrome-[0-9]+-min"
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Chrome major for warm image, e.g. 148"
-        required: true
-        default: "148"
-      publish_min:
-        description: "Also publish chrome-min images (149-min, 148-min)"
-        type: boolean
-        default: true
 
 jobs:
   docker:
@@ -26,13 +15,8 @@ jobs:
       matrix:
         include:
           - browser: chrome
-            variant: ""
-            version: ""
-          - browser: chrome
-            variant: min
             version: "149"
           - browser: chrome
-            variant: min
             version: "148"
     steps:
       - uses: actions/checkout@v4
@@ -44,47 +28,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Resolve version
-        id: tag
-        run: |
-          if [[ "${{ matrix.variant }}" == "min" ]]; then
-            echo "version=${{ matrix.version }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            ref="${GITHUB_REF#refs/tags/}"
-            ref="${ref#webdriver/}"
-            ref="${ref#chrome-}"
-            ref="${ref%-min}"
-            echo "version=${ref}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Skip warm image on min-only tag
-        id: skip
-        run: |
-          ref="${GITHUB_REF#refs/tags/}"
-          ref="${ref#webdriver/}"
-          if [[ "${{ matrix.variant }}" == "" && "${ref}" == *-min ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.variant }}" == "min" && "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.publish_min }}" != "true" ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build and push
-        if: steps.skip.outputs.skip != 'true'
+      - name: Build and push chrome-min
         env:
-          VERSION: ${{ steps.tag.outputs.version }}
+          VERSION: ${{ matrix.version }}
           BROWSER: ${{ matrix.browser }}
-          VARIANT: ${{ matrix.variant }}
         run: |
           chmod +x webdriver/scripts/push.sh
-          if [[ -n "${VARIANT}" ]]; then
-            ./webdriver/scripts/push.sh "${BROWSER}" "${VERSION}" "${VARIANT}"
-          else
-            ./webdriver/scripts/push.sh "${BROWSER}" "${VERSION}"
-          fi
+          ./webdriver/scripts/push.sh "${BROWSER}" "${VERSION}" min
 
   release:
     name: Create GitHub release (webdriver)
@@ -105,7 +55,6 @@ jobs:
           echo "name=WebDriver ${display}" >> "$GITHUB_OUTPUT"
 
       - name: Generate release notes
-        id: notes
         run: |
           chmod +x webdriver/scripts/release-notes.sh
           ./webdriver/scripts/release-notes.sh "${GITHUB_REF#refs/tags/}" > release-notes.md
@@ -126,17 +75,14 @@ jobs:
       - name: Resolve version
         id: version
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            ref="${GITHUB_REF#refs/tags/}"
-            ref="${ref#webdriver/}"
-            ref="${ref#chrome-}"
-            ref="${ref%-min}"
-            echo "version=${ref}" >> "$GITHUB_OUTPUT"
-          fi
+          ref="${GITHUB_REF#refs/tags/}"
+          ref="${ref#webdriver/}"
+          ref="${ref#chrome-}"
+          ref="${ref%-min}"
+          echo "version=${ref}" >> "$GITHUB_OUTPUT"
 
       - name: Trigger selenoid-tests smoke
+        if: github.event_name == 'push'
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}

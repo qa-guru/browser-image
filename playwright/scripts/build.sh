@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WARM_API_SRC="${ROOT}/../../warm-pool-orchestrator/warm-api"
 BROWSER="${1:-}"
 VERSION="${2:-1.61.1}"
 VARIANT="${3:-}"
@@ -39,15 +38,6 @@ if [[ -z "${PLATFORM:-}" ]]; then
   esac
 fi
 
-stage_warm_api() {
-  if [[ ! -d "${WARM_API_SRC}" ]]; then
-    echo "warm-api not found at ${WARM_API_SRC}" >&2
-    exit 1
-  fi
-  rm -rf "${ROOT}/warm-api"
-  cp -R "${WARM_API_SRC}" "${ROOT}/warm-api"
-}
-
 build_one() {
   local browser="$1"
   local image="qaguru/playwright-${browser}"
@@ -64,10 +54,6 @@ build_one() {
     exit 1
   fi
 
-  if [[ "${VARIANT}" != "min" ]]; then
-    stage_warm_api
-  fi
-
   docker build \
     --platform "${PLATFORM}" \
     --build-arg "PLAYWRIGHT_VERSION=${PW_PACKAGE}" \
@@ -76,7 +62,6 @@ build_one() {
     "${ROOT}"
 
   echo "Built ${tag}"
-  rm -rf "${ROOT}/warm-api"
 }
 
 if [[ "${BROWSER}" == "all" ]]; then
