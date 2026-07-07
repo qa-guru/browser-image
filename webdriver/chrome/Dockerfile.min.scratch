@@ -61,7 +61,6 @@ RUN set -eux \
            && unzip -q /tmp/chromedriver.zip -d /tmp \
            && mv "/opt/chrome-${chrome_arch}" /opt/chrome \
            && install -m 0755 "/tmp/chromedriver-${chrome_arch}/chromedriver" /usr/local/bin/chromedriver \
-           && ln -sf /opt/chrome/chrome /usr/local/bin/google-chrome \
            && rm -rf /tmp/chrome.zip /tmp/chromedriver.zip "/tmp/chromedriver-${chrome_arch}" \
            ;; \
          arm64) \
@@ -70,13 +69,18 @@ RUN set -eux \
                 chromium \
                 chromium-driver \
            && rm -rf /var/lib/apt/lists/* \
-           && ln -sf /usr/bin/chromium /usr/local/bin/google-chrome \
            && ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver \
            ;; \
          *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
        esac
 
 COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
+COPY shared/chrome-wrapper.sh /usr/local/bin/google-chrome
+RUN chmod +x /usr/local/bin/google-chrome \
+    && case "${TARGETARCH}" in \
+         arm64) sed -i 's|CHROME_BIN:-/opt/chrome/chrome|CHROME_BIN:-/usr/bin/chromium|' /usr/local/bin/google-chrome ;; \
+       esac
+
 COPY shared/entrypoint-min.sh /opt/webdriver/
 RUN chmod +x /opt/webdriver/entrypoint-min.sh
 

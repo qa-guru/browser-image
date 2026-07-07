@@ -65,6 +65,6 @@ fi
 chromedriver \
   --port="${CHROMEDRIVER_PORT}" \
   --allowed-ips= \
-  --allowed-origins='*' &
+  --allowed-origins='*' \n  --disable-dev-shm-usage &
 driver_pid=$!
 wait "${driver_pid}"
