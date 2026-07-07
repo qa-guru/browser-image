@@ -45,7 +45,7 @@ chmod +x scripts/build.sh scripts/push.sh
 ./scripts/build.sh chrome 149.0.7827.55 min
 ```
 
-Warm-сборка копирует shared `warm-api` из `warm-pool-orchestrator/warm-api` перед build.
+Warm-сборка копирует `warm-api` из `warm-pool-orchestrator/warm-api` (monorepo) или из закоммиченного `vendor/warm-api/` (CI / standalone clone).
 
 `Dockerfile.scratch` — канон для warm (Chrome for Testing + Ubuntu Noble + VNC/warm API).  
 `Dockerfile.min.scratch` — канон для min (headless CI, multi-arch: amd64 = CfT Chrome, arm64 = Debian Chromium).

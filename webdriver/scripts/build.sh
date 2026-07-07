@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPTS="${ROOT}/scripts"
 WARM_API_SRC="${ROOT}/../../warm-pool-orchestrator/warm-api"
+WARM_API_VENDOR="${ROOT}/vendor/warm-api"
 BROWSER="${1:-chrome}"
 VERSION="${2:-148}"
 VARIANT="${3:-}"
@@ -29,12 +30,17 @@ if [[ -z "${PLATFORM:-}" ]]; then
 fi
 
 stage_warm_api() {
-  if [[ ! -d "${WARM_API_SRC}" ]]; then
-    echo "warm-api not found at ${WARM_API_SRC}" >&2
+  local src=""
+  if [[ -d "${WARM_API_SRC}" ]]; then
+    src="${WARM_API_SRC}"
+  elif [[ -d "${WARM_API_VENDOR}" ]]; then
+    src="${WARM_API_VENDOR}"
+  else
+    echo "warm-api not found at ${WARM_API_SRC} or ${WARM_API_VENDOR}" >&2
     exit 1
   fi
   rm -rf "${ROOT}/warm-api"
-  cp -R "${WARM_API_SRC}" "${ROOT}/warm-api"
+  cp -R "${src}" "${ROOT}/warm-api"
   cp "${ROOT}/shared/webdriver-warm-main.cjs" "${ROOT}/warm-api/"
 }
 
