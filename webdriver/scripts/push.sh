@@ -95,6 +95,8 @@ push_one() {
       --build-arg "CHROME_CFT_VERSION=${cft_version}"
       --build-arg "CHROME_MAJOR=${major}"
     )
+    # CfT Chrome zip is not available for every linux-arm64 milestone; warm pool runs amd64.
+    platforms="linux/amd64"
   fi
 
   docker buildx build \
