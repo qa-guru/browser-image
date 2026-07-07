@@ -56,6 +56,8 @@ if [[ "${ENABLE_VNC}" == "true" ]]; then
   vnc_pid=$!
 fi
 
-geckodriver   --host 0.0.0.0   --port "${GECKODRIVER_PORT}"   --allow-hosts localhost 127.0.0.1 &
+container_host="$(hostname -f 2>/dev/null || hostname)"
+
+geckodriver   --host 0.0.0.0   --port "${GECKODRIVER_PORT}"   --allow-hosts localhost 127.0.0.1 "${container_host}" &
 driver_pid=$!
 wait "${driver_pid}"
