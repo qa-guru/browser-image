@@ -42,7 +42,7 @@ docker login
 git tag webdriver/chrome-149-min && git push origin webdriver/chrome-149-min
 ```
 
-Legacy tag `chrome-149-min` тоже триггерит CI.
+Legacy tag `chrome-149-min` больше не используется — только `webdriver/chrome-149-min`.
 
 ## Run
 

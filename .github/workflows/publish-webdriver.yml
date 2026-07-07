@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "webdriver/chrome-[0-9]+-min"
-      - "chrome-[0-9]+-min"
   workflow_dispatch:
 
 jobs:

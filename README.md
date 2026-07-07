@@ -24,11 +24,12 @@
 
 ## Releases
 
-Два независимых release line:
+Канонические git-теги = префикс стека + версия Docker:
 
-| Стек | Git tag (канон) | Docker tag |
-|------|-----------------|------------|
+| Стек | Git tag | Docker |
+|------|---------|--------|
 | Playwright | `playwright/1.61.1` | `qaguru/playwright-chromium:1.61.1` |
+| Playwright min | `playwright/1.61.1-min` | `qaguru/playwright-chromium:1.61.1-min` |
 | WebDriver min | `webdriver/chrome-149-min` | `qaguru/webdriver-chrome:149-min` |
 
 Публикация — `playwright/README.md`, `webdriver/README.md`. CI: `.github/workflows/`.

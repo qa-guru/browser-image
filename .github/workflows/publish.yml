@@ -4,13 +4,20 @@ on:
   push:
     tags:
       - "playwright/[0-9]+.[0-9]+.[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - "playwright/[0-9]+.[0-9]+.[0-9]+-min"
   workflow_dispatch:
     inputs:
       version:
         description: "Playwright image tag, e.g. 1.61.1"
         required: true
         default: "1.61.1"
+      variant:
+        description: "full (all browsers + chromium-min) or min (chromium-min only)"
+        type: choice
+        options:
+          - full
+          - min
+        default: full
 
 jobs:
   docker:
@@ -41,18 +48,43 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Resolve tag
+      - name: Resolve version
         id: tag
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            if [[ "${{ inputs.variant }}" == "min" ]]; then
+              echo "mode=min" >> "$GITHUB_OUTPUT"
+            else
+              echo "mode=full" >> "$GITHUB_OUTPUT"
+            fi
           else
             ref="${GITHUB_REF#refs/tags/}"
             ref="${ref#playwright/}"
-            echo "version=${ref}" >> "$GITHUB_OUTPUT"
+            if [[ "${ref}" == *-min ]]; then
+              echo "version=${ref%-min}" >> "$GITHUB_OUTPUT"
+              echo "mode=min" >> "$GITHUB_OUTPUT"
+            else
+              echo "version=${ref}" >> "$GITHUB_OUTPUT"
+              echo "mode=full" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Skip matrix row
+        id: skip
+        run: |
+          if [[ "${{ steps.tag.outputs.mode }}" == "min" ]]; then
+            if [[ "${{ matrix.variant }}" == "" || "${{ matrix.browser }}" != "chromium" ]]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build and push
+        if: steps.skip.outputs.skip != 'true'
         env:
           VERSION: ${{ steps.tag.outputs.version }}
           BROWSER: ${{ matrix.browser }}
@@ -80,49 +112,39 @@ jobs:
         run: |
           ref="${GITHUB_REF#refs/tags/}"
           version="${ref#playwright/}"
+          version="${version%-min}"
           echo "tag=${ref}" >> "$GITHUB_OUTPUT"
-          echo "name=Playwright ${version}" >> "$GITHUB_OUTPUT"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if [[ "${ref}" == *-min ]]; then
+            echo "name=Playwright ${version}-min" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=Playwright ${version}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate release notes
+        run: |
+          chmod +x playwright/scripts/release-notes.sh
+          ./playwright/scripts/release-notes.sh "${GITHUB_REF#refs/tags/}" > release-notes.md
 
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.name }}
-          body: |
-            ## Playwright ${{ steps.tag.outputs.version }} browser images
-
-            Docker images published to Docker Hub:
-
-            | Image | Tag |
-            |-------|-----|
-            | `qaguru/playwright-chromium` | `${{ steps.tag.outputs.version }}` |
-            | `qaguru/playwright-firefox` | `${{ steps.tag.outputs.version }}` |
-            | `qaguru/playwright-webkit` | `${{ steps.tag.outputs.version }}` |
-            | `qaguru/playwright-chrome` | `${{ steps.tag.outputs.version }}` |
-            | `qaguru/playwright-msedge` | `${{ steps.tag.outputs.version }}` |
-            | `qaguru/playwright-chromium` | `${{ steps.tag.outputs.version }}-min` |
-
-            Git tag `playwright/<version>` or legacy `<version>` — Playwright release line (independent from WebDriver chrome majors).
-
-            Triggered by CI workflow `publish` on tag push.
+          body_path: release-notes.md
           make_latest: false
 
   trigger-selenoid-tests:
     name: Trigger selenoid-tests (playwright)
     needs: docker
-    if: success()
+    if: success() && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Resolve version
         id: version
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            ref="${GITHUB_REF#refs/tags/}"
-            ref="${ref#playwright/}"
-            echo "version=${ref}" >> "$GITHUB_OUTPUT"
-          fi
+          ref="${GITHUB_REF#refs/tags/}"
+          ref="${ref#playwright/}"
+          ref="${ref%-min}"
+          echo "version=${ref}" >> "$GITHUB_OUTPUT"
 
       - name: Trigger selenoid-tests smoke
         uses: peter-evans/repository-dispatch@v3
