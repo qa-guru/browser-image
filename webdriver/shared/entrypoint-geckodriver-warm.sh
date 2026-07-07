@@ -4,7 +4,7 @@ set -euo pipefail
 # shellcheck source=common.sh
 source "$(dirname "$(realpath "$0")")/common.sh"
 
-CHROMEDRIVER_PORT="${CHROMEDRIVER_PORT:-4444}"
+GECKODRIVER_PORT="${GECKODRIVER_PORT:-4444}"
 DISPLAY_NUM="${DISPLAY_NUM:-99}"
 export DISPLAY="${DISPLAY:-:${DISPLAY_NUM}}"
 SCREEN_RESOLUTION="${SCREEN_RESOLUTION:-1920x1080x24}"
@@ -52,20 +52,10 @@ if [[ "${needs_display}" == "true" ]]; then
 fi
 
 if [[ "${ENABLE_VNC}" == "true" ]]; then
-  x11vnc \
-    -display "${DISPLAY}" \
-    -rfbport 5900 \
-    -forever \
-    -shared \
-    -passwd selenoid \
-    >/dev/null 2>&1 &
+  x11vnc     -display "${DISPLAY}"     -rfbport 5900     -forever     -shared     -passwd selenoid     >/dev/null 2>&1 &
   vnc_pid=$!
 fi
 
-chromedriver \
-  --port="${CHROMEDRIVER_PORT}" \
-  --allowed-ips= \
-  --allowed-origins='*' \
-  --disable-dev-shm-usage &
+geckodriver   --host 0.0.0.0   --port "${GECKODRIVER_PORT}"   --allow-hosts localhost 127.0.0.1 &
 driver_pid=$!
 wait "${driver_pid}"

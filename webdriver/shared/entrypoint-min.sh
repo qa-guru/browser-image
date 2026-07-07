@@ -6,4 +6,5 @@ CHROMEDRIVER_PORT="${CHROMEDRIVER_PORT:-4444}"
 exec chromedriver \
   --port="${CHROMEDRIVER_PORT}" \
   --allowed-ips= \
-  --allowed-origins='*' \n  --disable-dev-shm-usage
+  --allowed-origins='*' \
+  --disable-dev-shm-usage

@@ -4,9 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPTS="${ROOT}/scripts"
 
-# shellcheck source=chrome-versions.sh
-source "${SCRIPTS}/chrome-versions.sh"
-
 tag="${1:-}"
 if [[ -z "${tag}" ]]; then
   echo "Usage: $0 <git-tag>" >&2
@@ -17,40 +14,64 @@ ref="${tag#refs/tags/}"
 ref="${ref#webdriver/}"
 
 variant="warm"
-major="${ref#chrome-}"
+browser="chrome"
+major="${ref}"
+
+if [[ "${ref}" == firefox-* ]]; then
+  browser="firefox"
+  major="${ref#firefox-}"
+elif [[ "${ref}" == msedge-* ]]; then
+  browser="msedge"
+  major="${ref#msedge-}"
+elif [[ "${ref}" == chrome-* ]]; then
+  browser="chrome"
+  major="${ref#chrome-}"
+fi
+
 if [[ "${major}" == *-min ]]; then
   variant="min"
   major="${major%-min}"
 fi
 
-cft="$(resolve_chrome_cft_version "${major}")"
+# shellcheck source=/dev/null
+source "${SCRIPTS}/${browser}-versions.sh"
+
+case "${browser}" in
+  chrome)
+    detail="$(resolve_chrome_cft_version "${major}")"
+    image="qaguru/webdriver-chrome"
+    ;;
+  firefox)
+    detail="$(resolve_firefox_version "${major}")"
+    image="qaguru/webdriver-firefox"
+    ;;
+  msedge)
+    detail="$(resolve_edge_version "${major}")"
+    image="qaguru/webdriver-msedge"
+    ;;
+esac
+
+tag_suffix="${major}"
+if [[ "${variant}" == "min" ]]; then
+  tag_suffix="${major}-min"
+fi
 
 if [[ "${variant}" == "min" ]]; then
-  cat <<NOTES
-## WebDriver chrome-min ${major}
-
-Docker image published to Docker Hub:
-
-| Image | Tag | CfT |
-|-------|-----|-----|
-| \`qaguru/webdriver-chrome\` | \`${major}-min\` | \`${cft}\` |
-
-Headless CI image (chromedriver only, no VNC).
-
-Triggered by CI workflow \`publish-webdriver\` on tag push.
-NOTES
+  notes="Headless CI image (driver only, no VNC)."
 else
-  cat <<NOTES
-## WebDriver chrome ${major}
+  notes="Prod image with Xvfb + x11vnc (port 5900, password \`selenoid\`) when \`ENABLE_VNC=true\`."
+fi
+
+cat <<NOTES
+## WebDriver ${browser}${variant:+-}${variant} ${major}
 
 Docker image published to Docker Hub:
 
-| Image | Tag | CfT |
-|-------|-----|-----|
-| \`qaguru/webdriver-chrome\` | \`${major}\` | \`${cft}\` |
+| Image | Tag | Version |
+|-------|-----|---------|
+| \`${image}\` | \`${tag_suffix}\` | \`${detail}\` |
 
-Prod image with Xvfb + x11vnc (port 5900, password \`selenoid\`) when \`ENABLE_VNC=true\`.
+${notes}
 
 Triggered by CI workflow \`publish-webdriver\` on tag push.
 NOTES
-fi

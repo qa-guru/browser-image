@@ -1,0 +1,42 @@
+ARG EDGE_VERSION=145.0.3800.97
+ARG EDGE_DEB_VERSION=145.0.3800.97-1
+ARG EDGE_MAJOR=145
+FROM alpine:3.21 AS init
+RUN apk add --no-cache dumb-init
+
+FROM debian:bookworm
+ARG DEBIAN_FRONTEND=noninteractive
+ARG EDGE_VERSION
+ARG EDGE_DEB_VERSION
+ARG EDGE_MAJOR
+ARG TARGETARCH
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 EDGEDRIVER_PORT=4444
+
+RUN apt-get update     && apt-get install -y --no-install-recommends ca-certificates curl dumb-init wget unzip fonts-liberation libasound2 libatk-bridge2.0-0 libgtk-3-0 libnss3 libx11-6 libxcb1     && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux \
+    && if [ "${TARGETARCH}" != "amd64" ]; then echo "msedge webdriver images are linux/amd64 only" >&2; exit 1; fi \
+    && wget -q "https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_${EDGE_DEB_VERSION}_amd64.deb" -O /tmp/edge.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends /tmp/edge.deb \
+    && rm -f /tmp/edge.deb \
+    && wget -q "https://msedgedriver.microsoft.com/${EDGE_VERSION}/edgedriver_linux64.zip" -O /tmp/edgedriver.zip \
+    && unzip -q /tmp/edgedriver.zip -d /tmp \
+    && install -m 0755 /tmp/msedgedriver /usr/local/bin/msedgedriver \
+    && rm -rf /tmp/edgedriver.zip /tmp/msedgedriver \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
+RUN rm -f /usr/bin/microsoft-edge-stable
+COPY shared/msedge-wrapper.sh /usr/bin/microsoft-edge-stable
+RUN chmod +x /usr/bin/microsoft-edge-stable
+COPY shared/entrypoint-msedgedriver-min.sh /opt/webdriver/
+RUN chmod +x /opt/webdriver/entrypoint-msedgedriver-min.sh
+
+EXPOSE 4444
+HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=6     CMD curl -sf "http://127.0.0.1:${EDGEDRIVER_PORT}/status" >/dev/null || exit 1
+
+LABEL org.opencontainers.image.title="qaguru/webdriver-msedge-min"       io.qaguru.browser="msedge" io.qaguru.protocol="webdriver" io.qaguru.variant="min"       io.qaguru.edge.version="${EDGE_VERSION}"
+
+ENTRYPOINT ["dumb-init", "--", "/opt/webdriver/entrypoint-msedgedriver-min.sh"]

@@ -1,0 +1,64 @@
+ARG FIREFOX_VERSION=151.0
+ARG GECKODRIVER_VERSION=0.37.0
+ARG FIREFOX_MAJOR=151
+FROM alpine:3.21 AS init
+RUN apk add --no-cache dumb-init
+
+FROM debian:bookworm
+ARG DEBIAN_FRONTEND=noninteractive
+ARG FIREFOX_VERSION
+ARG GECKODRIVER_VERSION
+ARG FIREFOX_MAJOR
+ARG TARGETARCH
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 GECKODRIVER_PORT=4444
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates curl dumb-init bzip2 xz-utils wget \
+        libasound2 libdbus-glib-1-2 libgtk-3-0 libx11-xcb1 libxt6 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux \
+    && case "${TARGETARCH}" in \
+         amd64) \
+           wget -q "https://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.xz" -O /tmp/firefox.tar.xz \
+           && tar -xJf /tmp/firefox.tar.xz -C /opt \
+           && mv "/opt/firefox" "/opt/firefox-${FIREFOX_MAJOR}" \
+           && ln -s "/opt/firefox-${FIREFOX_MAJOR}" /opt/firefox \
+           && wget -q "https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz" -O /tmp/geckodriver.tgz \
+           && tar -xzf /tmp/geckodriver.tgz -C /usr/local/bin geckodriver \
+           && chmod +x /usr/local/bin/geckodriver \
+           && rm -rf /tmp/firefox.tar.xz /tmp/geckodriver.tgz \
+           ;; \
+         arm64) \
+           apt-get update \
+           && apt-get install -y --no-install-recommends firefox-esr \
+           && rm -rf /var/lib/apt/lists/* \
+           && wget -q "https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux-aarch64.tar.gz" -O /tmp/geckodriver.tgz \
+           && tar -xzf /tmp/geckodriver.tgz -C /usr/local/bin geckodriver \
+           && chmod +x /usr/local/bin/geckodriver \
+           && mkdir -p /opt/firefox \
+           && ln -sf /usr/bin/firefox-esr /opt/firefox/firefox \
+           ;; \
+         *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+       esac
+
+COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
+COPY shared/firefox-wrapper.sh /usr/local/bin/firefox
+RUN chmod +x /usr/local/bin/firefox \
+    && case "${TARGETARCH}" in \
+         arm64) sed -i 's|FIREFOX_BIN:-/opt/firefox/firefox|FIREFOX_BIN:-/usr/bin/firefox-esr|' /usr/local/bin/firefox ;; \
+       esac
+COPY shared/entrypoint-geckodriver-min.sh /opt/webdriver/
+RUN chmod +x /opt/webdriver/entrypoint-geckodriver-min.sh
+
+EXPOSE 4444
+HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=6 \
+    CMD curl -sf "http://127.0.0.1:${GECKODRIVER_PORT}/status" >/dev/null || exit 1
+
+LABEL org.opencontainers.image.title="qaguru/webdriver-firefox-min" \
+      io.qaguru.browser="firefox" io.qaguru.protocol="webdriver" io.qaguru.variant="min" \
+      io.qaguru.firefox.version="${FIREFOX_VERSION}"
+
+ENTRYPOINT ["dumb-init", "--", "/opt/webdriver/entrypoint-geckodriver-min.sh"]

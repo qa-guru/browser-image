@@ -5,6 +5,10 @@ on:
     tags:
       - "webdriver/chrome-[0-9]+-min"
       - "webdriver/chrome-[0-9]+"
+      - "webdriver/firefox-[0-9]+-min"
+      - "webdriver/firefox-[0-9]+"
+      - "webdriver/msedge-[0-9]+-min"
+      - "webdriver/msedge-[0-9]+"
   workflow_dispatch:
 
 jobs:
@@ -29,7 +33,17 @@ jobs:
           else
             ref="${GITHUB_REF#refs/tags/}"
             ref="${ref#webdriver/}"
-            ref="${ref#chrome-}"
+            browser="chrome"
+            if [[ "${ref}" == firefox-* ]]; then
+              browser="firefox"
+              ref="${ref#firefox-}"
+            elif [[ "${ref}" == msedge-* ]]; then
+              browser="msedge"
+              ref="${ref#msedge-}"
+            else
+              ref="${ref#chrome-}"
+            fi
+            echo "browser=${browser}" >> "$GITHUB_OUTPUT"
             if [[ "${ref}" == *-min ]]; then
               echo "variant=min" >> "$GITHUB_OUTPUT"
               ref="${ref%-min}"
@@ -40,13 +54,13 @@ jobs:
             echo "major=${ref}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build and push webdriver-chrome
+      - name: Build and push webdriver images
         run: |
           chmod +x webdriver/scripts/push.sh
           if [[ "${{ steps.version.outputs.mode }}" == "all" ]]; then
-            ./webdriver/scripts/push.sh chrome all both
+            ./webdriver/scripts/push.sh all all both
           else
-            ./webdriver/scripts/push.sh chrome "${{ steps.version.outputs.major }}" "${{ steps.version.outputs.variant }}"
+            ./webdriver/scripts/push.sh "${{ steps.version.outputs.browser }}" "${{ steps.version.outputs.major }}" "${{ steps.version.outputs.variant }}"
           fi
 
   release:
@@ -90,12 +104,22 @@ jobs:
         run: |
           ref="${GITHUB_REF#refs/tags/}"
           ref="${ref#webdriver/}"
-          ref="${ref#chrome-}"
+          browser="chrome"
+          if [[ "${ref}" == firefox-* ]]; then
+            browser="firefox"
+            ref="${ref#firefox-}"
+          elif [[ "${ref}" == msedge-* ]]; then
+            browser="msedge"
+            ref="${ref#msedge-}"
+          else
+            ref="${ref#chrome-}"
+          fi
           variant="warm"
           if [[ "${ref}" == *-min ]]; then
             variant="min"
             ref="${ref%-min}"
           fi
+          echo "browser=${browser}" >> "$GITHUB_OUTPUT"
           echo "version=${ref}" >> "$GITHUB_OUTPUT"
           echo "variant=${variant}" >> "$GITHUB_OUTPUT"
 
@@ -109,5 +133,5 @@ jobs:
             {"source_repo":"${{ github.repository }}",
              "source_ref":"${{ github.ref }}",
              "source_version":"${{ steps.version.outputs.version }}",
-             "source_variant":"webdriver-${{ steps.version.outputs.variant }}",
+             "source_variant":"webdriver-${{ steps.version.outputs.browser }}-${{ steps.version.outputs.variant }}",
              "test_tags":"smoke"}

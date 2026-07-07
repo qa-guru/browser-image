@@ -4,7 +4,7 @@ set -euo pipefail
 # shellcheck source=common.sh
 source "$(dirname "$(realpath "$0")")/common.sh"
 
-CHROMEDRIVER_PORT="${CHROMEDRIVER_PORT:-4444}"
+EDGEDRIVER_PORT="${EDGEDRIVER_PORT:-4444}"
 DISPLAY_NUM="${DISPLAY_NUM:-99}"
 export DISPLAY="${DISPLAY:-:${DISPLAY_NUM}}"
 SCREEN_RESOLUTION="${SCREEN_RESOLUTION:-1920x1080x24}"
@@ -52,20 +52,10 @@ if [[ "${needs_display}" == "true" ]]; then
 fi
 
 if [[ "${ENABLE_VNC}" == "true" ]]; then
-  x11vnc \
-    -display "${DISPLAY}" \
-    -rfbport 5900 \
-    -forever \
-    -shared \
-    -passwd selenoid \
-    >/dev/null 2>&1 &
+  x11vnc     -display "${DISPLAY}"     -rfbport 5900     -forever     -shared     -passwd selenoid     >/dev/null 2>&1 &
   vnc_pid=$!
 fi
 
-chromedriver \
-  --port="${CHROMEDRIVER_PORT}" \
-  --allowed-ips= \
-  --allowed-origins='*' \
-  --disable-dev-shm-usage &
+msedgedriver   --port="${EDGEDRIVER_PORT}"   --allowed-ips=   --allowed-origins='*'   --disable-dev-shm-usage &
 driver_pid=$!
 wait "${driver_pid}"
