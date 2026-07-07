@@ -4,7 +4,7 @@ set -euo pipefail
 # Canonical Chrome for Testing versions for webdriver-chrome*-min.
 # Primary input: Chrome major (148, 149). PW semver below is legacy alias only.
 
-CHROME_MIN_MAJORS=(149 148)
+CHROME_MAJORS=(149 148)
 
 chrome_cft_version_for_major() {
   case "$1" in
@@ -56,12 +56,49 @@ resolve_chrome_major() {
   printf '%s' "${cft%%.*}"
 }
 
+
+resolve_warm_tag() {
+  local major
+  major="$(resolve_chrome_major "$1")"
+  printf '%s' "${major}"
+}
+
+resolve_variant_tag() {
+  local version="$1"
+  local variant="$2"
+  case "${variant}" in
+    min) resolve_min_tag "${version}" ;;
+    warm) resolve_warm_tag "${version}" ;;
+    *)
+      echo "Unknown variant: ${variant} (use min or warm)" >&2
+      return 1
+      ;;
+  esac
+}
+
+resolve_dockerfile() {
+  local variant="$1"
+  case "${variant}" in
+    min) printf '%s' "Dockerfile.min.scratch" ;;
+    warm) printf '%s' "Dockerfile.warm" ;;
+    *)
+      echo "Unknown variant: ${variant}" >&2
+      return 1
+      ;;
+  esac
+}
+
+# Backward-compatible alias
+list_chrome_min_majors() {
+  list_chrome_majors
+}
+
 resolve_min_tag() {
   local major
   major="$(resolve_chrome_major "$1")"
   printf '%s' "${major}-min"
 }
 
-list_chrome_min_majors() {
-  printf '%s\n' "${CHROME_MIN_MAJORS[@]}"
+list_chrome_majors() {
+  printf '%s\n' "${CHROME_MAJORS[@]}"
 }

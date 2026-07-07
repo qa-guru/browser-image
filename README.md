@@ -5,7 +5,7 @@
 | Папка | Образы | Upstream | Документация |
 |-------|--------|----------|--------------|
 | [`playwright/`](playwright/) | `qaguru/playwright-*` | `mcr.microsoft.com/playwright` + npm `@playwright/test` | Playwright nodes + `chromium-min` |
-| [`webdriver/`](webdriver/) | `qaguru/webdriver-chrome*-min` | Chrome for Testing (Google) | headless `chrome-min` |
+| [`webdriver/`](webdriver/) | `qaguru/webdriver-chrome*` | Chrome for Testing (Google) | warm (VNC) + `chrome-min` |
 
 **Twilio** (`twilio/selenoid`) — исторический legacy; в `browsers.json`, CI и сборке не используется.
 
@@ -19,6 +19,7 @@
 ./playwright/scripts/build.sh chromium 1.61.1 min
 
 # WebDriver (chrome-min only)
+./webdriver/scripts/build.sh chrome 149 warm
 ./webdriver/scripts/build.sh chrome 149 min
 ```
 
@@ -30,6 +31,7 @@
 |------|---------|--------|
 | Playwright | `playwright/1.61.1` | `qaguru/playwright-chromium:1.61.1` |
 | Playwright min | `playwright/1.61.1-min` | `qaguru/playwright-chromium:1.61.1-min` |
+| WebDriver warm | `webdriver/chrome-149` | `qaguru/webdriver-chrome:149` |
 | WebDriver min | `webdriver/chrome-149-min` | `qaguru/webdriver-chrome:149-min` |
 
 Публикация — `playwright/README.md`, `webdriver/README.md`. CI: `.github/workflows/`.

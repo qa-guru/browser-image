@@ -1,0 +1,100 @@
+ARG CHROME_CFT_VERSION=149.0.7827.55
+FROM alpine:3.21 AS init
+RUN apk add --no-cache dumb-init
+
+FROM debian:bookworm
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG CHROME_CFT_VERSION
+ARG CHROME_MAJOR
+ARG TARGETARCH
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    CHROMEDRIVER_PORT=4444
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        dumb-init \
+        fonts-liberation \
+        unzip \
+        wget \
+        x11-utils \
+        x11vnc \
+        xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+# amd64: Google Chrome for Testing (canonical for prod / catalog).
+# arm64: native Chromium from Debian — CfT has no linux-arm64 builds yet
+# (see https://googlechromelabs.github.io/chrome-for-testing/).
+RUN set -eux \
+    && case "${TARGETARCH}" in \
+         amd64) \
+           apt-get update \
+           && apt-get install -y --no-install-recommends \
+                libasound2 \
+                libatk-bridge2.0-0 \
+                libatk1.0-0 \
+                libcairo2 \
+                libcups2 \
+                libdbus-1-3 \
+                libdrm2 \
+                libgbm1 \
+                libglib2.0-0 \
+                libgtk-3-0 \
+                libnspr4 \
+                libnss3 \
+                libpango-1.0-0 \
+                libx11-6 \
+                libxcb1 \
+                libxcomposite1 \
+                libxdamage1 \
+                libxext6 \
+                libxfixes3 \
+                libxkbcommon0 \
+                libxrandr2 \
+           && rm -rf /var/lib/apt/lists/* \
+           && chrome_arch=linux64 \
+           && base="https://storage.googleapis.com/chrome-for-testing-public/${CHROME_CFT_VERSION}/${chrome_arch}" \
+           && wget -q "${base}/chrome-${chrome_arch}.zip" -O /tmp/chrome.zip \
+           && wget -q "${base}/chromedriver-${chrome_arch}.zip" -O /tmp/chromedriver.zip \
+           && unzip -q /tmp/chrome.zip -d /opt \
+           && unzip -q /tmp/chromedriver.zip -d /tmp \
+           && mv "/opt/chrome-${chrome_arch}" /opt/chrome \
+           && install -m 0755 "/tmp/chromedriver-${chrome_arch}/chromedriver" /usr/local/bin/chromedriver \
+           && ln -sf /opt/chrome/chrome /usr/local/bin/google-chrome \
+           && rm -rf /tmp/chrome.zip /tmp/chromedriver.zip "/tmp/chromedriver-${chrome_arch}" \
+           ;; \
+         arm64) \
+           apt-get update \
+           && apt-get install -y --no-install-recommends \
+                chromium \
+                chromium-driver \
+           && rm -rf /var/lib/apt/lists/* \
+           && ln -sf /usr/bin/chromium /usr/local/bin/google-chrome \
+           && ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver \
+           ;; \
+         *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+       esac
+
+COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
+COPY shared/common.sh shared/entrypoint-warm.sh /opt/webdriver/
+RUN chmod +x /opt/webdriver/common.sh /opt/webdriver/entrypoint-warm.sh
+
+EXPOSE 4444 5900
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=6 \
+    CMD curl -sf "http://127.0.0.1:${CHROMEDRIVER_PORT}/status" >/dev/null || exit 1
+
+LABEL org.opencontainers.image.title="qaguru/webdriver-chrome" \
+      org.opencontainers.image.source="https://github.com/qa-guru/browser-image" \
+      io.qaguru.browser="chrome" \
+      io.qaguru.protocol="webdriver" \
+      io.qaguru.port="4444" \
+      io.qaguru.variant="warm" \
+      io.qaguru.chrome.cft="${CHROME_CFT_VERSION}" \
+      io.qaguru.chrome.major="${CHROME_MAJOR}"
+
+ENTRYPOINT ["dumb-init", "--", "/opt/webdriver/entrypoint-warm.sh"]

@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "webdriver/chrome-[0-9]+-min"
+      - "webdriver/chrome-[0-9]+"
   workflow_dispatch:
 
 jobs:
@@ -19,27 +20,33 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Resolve chrome major
+      - name: Resolve chrome major and variant
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "mode=all" >> "$GITHUB_OUTPUT"
+            echo "variant=both" >> "$GITHUB_OUTPUT"
           else
             ref="${GITHUB_REF#refs/tags/}"
             ref="${ref#webdriver/}"
             ref="${ref#chrome-}"
-            ref="${ref%-min}"
+            if [[ "${ref}" == *-min ]]; then
+              echo "variant=min" >> "$GITHUB_OUTPUT"
+              ref="${ref%-min}"
+            else
+              echo "variant=warm" >> "$GITHUB_OUTPUT"
+            fi
             echo "mode=one" >> "$GITHUB_OUTPUT"
             echo "major=${ref}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build and push chrome-min
+      - name: Build and push webdriver-chrome
         run: |
           chmod +x webdriver/scripts/push.sh
           if [[ "${{ steps.version.outputs.mode }}" == "all" ]]; then
-            ./webdriver/scripts/push.sh chrome all min
+            ./webdriver/scripts/push.sh chrome all both
           else
-            ./webdriver/scripts/push.sh chrome "${{ steps.version.outputs.major }}" min
+            ./webdriver/scripts/push.sh chrome "${{ steps.version.outputs.major }}" "${{ steps.version.outputs.variant }}"
           fi
 
   release:
@@ -84,8 +91,13 @@ jobs:
           ref="${GITHUB_REF#refs/tags/}"
           ref="${ref#webdriver/}"
           ref="${ref#chrome-}"
-          ref="${ref%-min}"
+          variant="warm"
+          if [[ "${ref}" == *-min ]]; then
+            variant="min"
+            ref="${ref%-min}"
+          fi
           echo "version=${ref}" >> "$GITHUB_OUTPUT"
+          echo "variant=${variant}" >> "$GITHUB_OUTPUT"
 
       - name: Trigger selenoid-tests smoke
         uses: peter-evans/repository-dispatch@v3
@@ -97,5 +109,5 @@ jobs:
             {"source_repo":"${{ github.repository }}",
              "source_ref":"${{ github.ref }}",
              "source_version":"${{ steps.version.outputs.version }}",
-             "source_variant":"webdriver",
+             "source_variant":"webdriver-${{ steps.version.outputs.variant }}",
              "test_tags":"smoke"}
