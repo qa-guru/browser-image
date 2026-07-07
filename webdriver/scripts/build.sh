@@ -43,23 +43,27 @@ build_one() {
   local version="$2"
   local image="qaguru/webdriver-${browser}"
   local tag="${image}:${version}"
-  local dockerfile="${ROOT}/${browser}/Dockerfile"
+  local dockerfile="${ROOT}/${browser}/Dockerfile.scratch"
   local build_args=()
+  local cft_version major
+
+  cft_version="$(resolve_chrome_cft_version "${version}")"
+  major="$(resolve_chrome_major "${version}")"
 
   if [[ "${VARIANT}" == "min" ]]; then
-    local cft_version major
-    cft_version="$(resolve_chrome_cft_version "${version}")"
-    major="$(resolve_chrome_major "${version}")"
     tag="${image}:$(resolve_min_tag "${version}")"
     dockerfile="${ROOT}/${browser}/Dockerfile.min.scratch"
     build_args=(
       --build-arg "CHROME_CFT_VERSION=${cft_version}"
       --build-arg "CHROME_MAJOR=${major}"
     )
-    PLATFORM="linux/amd64"
   else
     stage_warm_api
-    build_args=(--build-arg "CHROME_VERSION=${version}")
+    tag="${image}:${major}"
+    build_args=(
+      --build-arg "CHROME_CFT_VERSION=${cft_version}"
+      --build-arg "CHROME_MAJOR=${major}"
+    )
   fi
 
   if [[ ! -f "${dockerfile}" ]]; then
@@ -80,8 +84,9 @@ build_one() {
 
 if [[ "${BROWSER}" == "all" ]]; then
   if [[ "${VARIANT}" == "min" ]]; then
-    build_one chrome 1.61.1
-    build_one chrome 1.60.0
+    while IFS= read -r major; do
+      build_one chrome "${major}"
+    done < <(list_chrome_min_majors)
   else
     build_one chrome "${VERSION}"
   fi

@@ -13,7 +13,7 @@ source "${SCRIPTS}/chrome-min-versions.sh"
 
 if [[ -z "${BROWSER}" ]]; then
   echo "Usage: $0 <browser|all> [version-tag] [variant]" >&2
-  echo "Variants: (default) | min (chrome only, Dockerfile.min.scratch)" >&2
+  echo "Variants: (default, Dockerfile.scratch) | min (chrome only, Dockerfile.min.scratch)" >&2
   exit 1
 fi
 
@@ -65,26 +65,30 @@ push_one() {
   local variant="${3:-}"
   local image="qaguru/webdriver-${browser}"
   local tag="${image}:${version}"
-  local dockerfile="${ROOT}/${browser}/Dockerfile"
+  local dockerfile="${ROOT}/${browser}/Dockerfile.scratch"
   local build_args=()
   local context="${ROOT}"
+  local cft_version major
+
+  cft_version="$(resolve_chrome_cft_version "${version}")"
+  major="$(resolve_chrome_major "${version}")"
 
   local platforms="${PLATFORMS}"
 
   if [[ "${variant}" == "min" ]]; then
-    local cft_version major
-    cft_version="$(resolve_chrome_cft_version "${version}")"
-    major="$(resolve_chrome_major "${version}")"
     tag="${image}:$(resolve_min_tag "${version}")"
     dockerfile="${ROOT}/${browser}/Dockerfile.min.scratch"
     build_args=(
       --build-arg "CHROME_CFT_VERSION=${cft_version}"
       --build-arg "CHROME_MAJOR=${major}"
     )
-    platforms="linux/amd64"
   else
     stage_warm_api
-    build_args=(--build-arg "CHROME_VERSION=${version}")
+    tag="${image}:${major}"
+    build_args=(
+      --build-arg "CHROME_CFT_VERSION=${cft_version}"
+      --build-arg "CHROME_MAJOR=${major}"
+    )
   fi
 
   docker buildx build \
@@ -102,8 +106,9 @@ push_one() {
 
 if [[ "${BROWSER}" == "all" ]]; then
   push_one chrome "${VERSION}"
-  push_one chrome 1.61.1 min
-  push_one chrome 1.60.0 min
+  while IFS= read -r major; do
+    push_one chrome "${major}" min
+  done < <(list_chrome_min_majors)
 elif [[ -n "${VARIANT}" ]]; then
   push_one "${BROWSER}" "${VERSION}" "${VARIANT}"
 else
