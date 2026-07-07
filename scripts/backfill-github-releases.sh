@@ -34,8 +34,8 @@ create_release() {
 }
 
 # Playwright semver lines (images on Docker Hub)
-PW_TARGET="${PW_TARGET:-fb01c0d}"
-PW_MIN_TARGET="${PW_MIN_TARGET:-1d644bb}"
+PW_TARGET="${PW_TARGET:-fb01c0d10219290b6a105cafae1af67c0fdd276d}"
+PW_MIN_TARGET="${PW_MIN_TARGET:-1d644bbe2fbacd8f18ba54deb636c7786351bae1}"
 
 for version in 1.46.0 1.60.0 1.61.0 1.61.1; do
   tag="playwright/${version}"
