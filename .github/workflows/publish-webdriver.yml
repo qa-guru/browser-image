@@ -15,11 +15,11 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -71,7 +71,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve release tag
         id: tag
@@ -86,7 +86,7 @@ jobs:
           chmod +x webdriver/scripts/release-notes.sh
           ./webdriver/scripts/release-notes.sh "${GITHUB_REF#refs/tags/}" > release-notes.md
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.name }}
@@ -100,41 +100,37 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      source_variant: ${{ steps.version.outputs.source_variant }}
     steps:
       - name: Resolve version
         id: version
         run: |
           ref="${GITHUB_REF#refs/tags/}"
           ref="${ref#webdriver/}"
-          browser="chrome"
           if [[ "${ref}" == firefox-* ]]; then
-            browser="firefox"
             ref="${ref#firefox-}"
           elif [[ "${ref}" == msedge-* ]]; then
-            browser="msedge"
             ref="${ref#msedge-}"
           else
             ref="${ref#chrome-}"
           fi
-          variant="warm"
           if [[ "${ref}" == *-min ]]; then
-            variant="min"
             ref="${ref%-min}"
           fi
           echo "version=${ref}" >> "$GITHUB_OUTPUT"
-          echo "source_variant=webdriver-${browser}-${variant}" >> "$GITHUB_OUTPUT"
 
   deploy-smoke:
     name: Publish smoke → selenoid-tests (webdriver)
-    needs: [docker, smoke-meta]
+    needs: smoke-meta
     if: success() && github.event_name == 'push'
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/smoke-trigger-callback.yml
     secrets:
       SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
     with:
       test_tags: smoke
-      source_variant: ${{ needs.smoke-meta.outputs.source_variant }}
+      source_variant: webdriver
       source_version: ${{ needs.smoke-meta.outputs.version }}
       source_ref: ${{ github.ref }}
       summary_title: Publish smoke → selenoid-tests (webdriver)
