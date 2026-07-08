@@ -93,11 +93,14 @@ jobs:
           body_path: release-notes.md
           make_latest: false
 
-  trigger-selenoid-tests:
-    name: Trigger selenoid-tests (webdriver)
+  smoke-meta:
+    name: Resolve smoke dispatch metadata
     needs: docker
     if: success() && github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      source_variant: ${{ steps.version.outputs.source_variant }}
     steps:
       - name: Resolve version
         id: version
@@ -119,19 +122,19 @@ jobs:
             variant="min"
             ref="${ref%-min}"
           fi
-          echo "browser=${browser}" >> "$GITHUB_OUTPUT"
           echo "version=${ref}" >> "$GITHUB_OUTPUT"
-          echo "variant=${variant}" >> "$GITHUB_OUTPUT"
+          echo "source_variant=webdriver-${browser}-${variant}" >> "$GITHUB_OUTPUT"
 
-      - name: Trigger selenoid-tests smoke
-        uses: peter-evans/repository-dispatch@v4
-        with:
-          token: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
-          repository: qa-guru/selenoid-tests
-          event-type: deploy-smoke
-          client-payload: >-
-            {"source_repo":"${{ github.repository }}",
-             "source_ref":"${{ github.ref }}",
-             "source_version":"${{ steps.version.outputs.version }}",
-             "source_variant":"webdriver-${{ steps.version.outputs.browser }}-${{ steps.version.outputs.variant }}",
-             "test_tags":"smoke"}
+  deploy-smoke:
+    name: Publish smoke → selenoid-tests (webdriver)
+    needs: [docker, smoke-meta]
+    if: success() && github.event_name == 'push'
+    uses: ./.github/workflows/smoke-trigger-callback.yml
+    secrets:
+      SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+    with:
+      test_tags: smoke
+      source_variant: ${{ needs.smoke-meta.outputs.source_variant }}
+      source_version: ${{ needs.smoke-meta.outputs.version }}
+      source_ref: ${{ github.ref }}
+      summary_title: Publish smoke → selenoid-tests (webdriver)
