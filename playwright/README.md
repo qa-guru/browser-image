@@ -121,7 +121,7 @@ WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-mi
 | **`launchServer`** | Вручную: `npx playwright run-server --port 3000 --host 0.0.0.0` | Автоматически: `/opt/playwright/server.cjs` в `ENTRYPOINT` |
 | **Подключение клиента** | Прямой WebSocket к контейнеру (`ws://host:3000/`) | Через hub: `ws://selenoid:4444/playwright/playwright-chromium/1.61.1?enableVNC=true&enableVideo=true` |
 | **VNC / headed UI** | noVNC только через [devcontainer feature](https://playwright.dev/docs/docker#connecting-using-novnc-and-github-codespaces) | Xvfb + x11vnc на **:5900** (Selenoid UI, пароль `selenoid`) |
-| **Видеозапись** | Нет | `ENABLE_VIDEO` + sidecar `selenoid/video-recorder` |
+| **Видеозапись** | Нет | `ENABLE_VIDEO` + sidecar `qaguru/video-recorder` |
 | **Healthcheck** | Нет | HTTP probe на `:3000` |
 | **PID 1 / init** | Рекомендуется `--init` при `docker run` | `dumb-init` в `ENTRYPOINT` |
 | **Пользователь** | `root` (по умолчанию) или `pwuser` | `pwuser` |

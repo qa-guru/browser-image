@@ -2,7 +2,7 @@
 
 Sidecar-образ для Selenoid: пишет H.264 MP4 с X11-дисплея browser-контейнера в `/data/`.
 
-Часть репозитория [`browser-image`](../README.md). Контракт совместим с `selenoid/video-recorder:latest-release` (env: `FILE_NAME`, `VIDEO_SIZE`, `FRAME_RATE`, `BROWSER_CONTAINER_NAME`, `DISPLAY`).
+Часть репозитория [`browser-image`](../README.md). Контракт совместим с legacy `selenoid/video-recorder` (env: `FILE_NAME`, `VIDEO_SIZE`, `FRAME_RATE`, `BROWSER_CONTAINER_NAME`, `DISPLAY`).
 
 | Docker | Назначение |
 |--------|------------|
