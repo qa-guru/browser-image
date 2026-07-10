@@ -2,6 +2,17 @@
 
 Один git-репозиторий [qa-guru/browser-image](https://github.com/qa-guru/browser-image) для Docker-образов браузерных нод Selenoid.
 
+## Экосистема qa-guru Selenoid
+
+| Ресурс | Ссылка | Роль |
+|--------|--------|------|
+| selenoid | [github.com/qa-guru/selenoid](https://github.com/qa-guru/selenoid) | Hub |
+| selenoid-ui | [github.com/qa-guru/selenoid-ui](https://github.com/qa-guru/selenoid-ui) | Web UI |
+| cm | [github.com/qa-guru/cm](https://github.com/qa-guru/cm) | Установщик |
+| **browser-image** (этот) | [github.com/qa-guru/browser-image](https://github.com/qa-guru/browser-image) | Docker browser nodes |
+| selenoid-tests | [github.com/qa-guru/selenoid-tests](https://github.com/qa-guru/selenoid-tests) | E2e/integration ethalon |
+| Docker Hub | [hub.docker.com/u/qaguru](https://hub.docker.com/u/qaguru) | Образы `qaguru/*` |
+
 | Папка | Образы | Upstream | Документация |
 |-------|--------|----------|--------------|
 | [`playwright/`](playwright/) | `qaguru/playwright-*` | `mcr.microsoft.com/playwright` + npm `@playwright/test` | Playwright nodes + `chromium-min` |
