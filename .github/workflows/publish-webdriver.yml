@@ -100,22 +100,31 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      source_browser: ${{ steps.version.outputs.browser }}
+      webdriver_variant: ${{ steps.version.outputs.variant }}
     steps:
       - name: Resolve version
         id: version
         run: |
           ref="${GITHUB_REF#refs/tags/}"
           ref="${ref#webdriver/}"
+          browser="chrome"
           if [[ "${ref}" == firefox-* ]]; then
+            browser="firefox"
             ref="${ref#firefox-}"
           elif [[ "${ref}" == msedge-* ]]; then
+            browser="msedge"
             ref="${ref#msedge-}"
           else
             ref="${ref#chrome-}"
           fi
+          variant="warm"
           if [[ "${ref}" == *-min ]]; then
+            variant="min"
             ref="${ref%-min}"
           fi
+          echo "browser=${browser}" >> "$GITHUB_OUTPUT"
+          echo "variant=${variant}" >> "$GITHUB_OUTPUT"
           echo "version=${ref}" >> "$GITHUB_OUTPUT"
 
   deploy-smoke:
@@ -131,6 +140,8 @@ jobs:
     with:
       test_tags: smoke
       source_variant: webdriver
+      source_browser: ${{ needs.smoke-meta.outputs.source_browser }}
+      webdriver_variant: ${{ needs.smoke-meta.outputs.webdriver_variant }}
       source_version: ${{ needs.smoke-meta.outputs.version }}
       source_ref: ${{ github.ref }}
       summary_title: Publish smoke → selenoid-tests (webdriver)
