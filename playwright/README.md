@@ -1,8 +1,5 @@
 # Playwright browser images
 
-
-### Playwright browser nodes
-
 Часть репозитория [`browser-image`](../README.md) (`playwright/`). WebDriver-образы — в [`webdriver/`](../webdriver/).
 
 Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/qa-guru/selenoid). Hub поднимает их по запросу и проксирует Playwright WebSocket на `/playwright/{browser}/{version}`.
