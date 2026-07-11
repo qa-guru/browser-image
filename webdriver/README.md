@@ -1,8 +1,5 @@
 # WebDriver browser images
 
-
-### WebDriver browser nodes
-
 Часть репозитория [`browser-image`](../README.md) (`webdriver/`). Playwright-образы — в [`playwright/`](../playwright/).
 
 Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Selenium server).
