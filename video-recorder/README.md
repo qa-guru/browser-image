@@ -11,6 +11,33 @@ Sidecar-образ для Selenoid: пишет H.264 MP4 с X11-дисплея b
 
 Основа — [aerokube/images/selenium/video](https://github.com/aerokube/images/tree/master/selenium/video) (Apache 2.0): Alpine 3.21, stock ffmpeg, `xdpyinfo` для ожидания дисплея, `-nostdin`.
 
+## Automated Tests Dashboard
+
+[![Video recorder](https://qa-guru.github.io/selenoid-tests/readme/badge-video-recorder.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Video recorder stats](https://qa-guru.github.io/selenoid-tests/readme/stats-video-recorder.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Video recorder metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-video-recorder.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-video-recorder-dark.png">
+    <img
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-video-recorder.png"
+      alt="Allure 3 dashboard — video-recorder sidecar only (status, pyramid, dynamics, treemap)"
+      width="800"
+    />
+  </picture>
+</a>
+
+> Component-filtered dashboard PNG (`@Component video-recorder` only). Updates after each orchestrator run on `main`.
+
+| Link | Description |
+|------|-------------|
+| [Awesome epic video-recorder](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Hub `/video` + UI proxy — session MP4 after `enableVideo` |
+| [Stack dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full Selenoid pyramid (all components) |
+| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure (`testVideoRecorder` smoke) |
+
 ## Build
 
 ```bash

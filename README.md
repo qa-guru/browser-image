@@ -60,15 +60,34 @@ Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged
   </picture>
 </a>
 
+### Video recorder sidecar
+
+[![Video recorder](https://qa-guru.github.io/selenoid-tests/readme/badge-video-recorder.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Video recorder stats](https://qa-guru.github.io/selenoid-tests/readme/stats-video-recorder.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Video recorder metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-video-recorder.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-video-recorder-dark.png">
+    <img
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-video-recorder.png"
+      alt="Allure 3 dashboard — video-recorder sidecar only"
+      width="800"
+    />
+  </picture>
+</a>
+
 > PNG previews update after each orchestrator run on `main` (full stack + per-component crops).
 
 | Link | Description |
 |------|-------------|
 | [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid — all hub components |
-| [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Epic **webdriver-image** + **playwright-image** |
+| [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Epic **webdriver-image** + **playwright-image** + **video-recorder** |
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
-Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-image.md`
+Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-image.md` · `video-recorder.md`
 
 Один git-репозиторий [qa-guru/browser-image](https://github.com/qa-guru/browser-image) для Docker-образов браузерных нод Selenoid.
 
