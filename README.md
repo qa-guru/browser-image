@@ -1,22 +1,33 @@
 # browser-image
 
 
+## Automated Tests Dashboard
+
+Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged Allure (filter `@Component`):
+
+### WebDriver browser nodes
+
 [![WebDriver nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![WebDriver stats](https://qa-guru.github.io/selenoid-tests/readme/stats-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![WebDriver metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+### Playwright browser nodes
 
 [![Playwright nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
-[![Browser nodes stats](https://qa-guru.github.io/selenoid-tests/readme/stats-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+[![Playwright stats](https://qa-guru.github.io/selenoid-tests/readme/stats-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
-[![Browser nodes metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+[![Playwright metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
 | Link | Description |
 |------|-------------|
 | [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
-| [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | **webdriver-image** + **playwright-image** epics |
+| [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Epic **webdriver-image** + **playwright-image** |
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
-
-Один git-репозиторий [qa-guru/browser-image](https://github.com/qa-guru/browser-image) для Docker-образов браузерных нод Selenoid.
+Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-image.md`
 
 ## Экосистема qa-guru Selenoid
 
