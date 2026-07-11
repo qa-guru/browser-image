@@ -17,6 +17,7 @@ Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/q
 |---|---|
 | **GitHub** | [qa-guru/browser-image](https://github.com/qa-guru/browser-image) |
 
+| **Docker Hub** | [`qaguru/playwright-chromium`](https://hub.docker.com/r/qaguru/playwright-chromium), [`playwright-firefox`](https://hub.docker.com/r/qaguru/playwright-firefox), [`playwright-webkit`](https://hub.docker.com/r/qaguru/playwright-webkit), [`playwright-chrome`](https://hub.docker.com/r/qaguru/playwright-chrome), [`playwright-msedge`](https://hub.docker.com/r/qaguru/playwright-msedge) |
 
 ## Automated Tests Dashboard
 
@@ -32,7 +33,6 @@ Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/q
 | [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
-| **Docker Hub** | [`qaguru/playwright-chromium`](https://hub.docker.com/r/qaguru/playwright-chromium), [`playwright-firefox`](https://hub.docker.com/r/qaguru/playwright-firefox), [`playwright-webkit`](https://hub.docker.com/r/qaguru/playwright-webkit), [`playwright-chrome`](https://hub.docker.com/r/qaguru/playwright-chrome), [`playwright-msedge`](https://hub.docker.com/r/qaguru/playwright-msedge) |
 
 ## Роль в экосистеме
 
