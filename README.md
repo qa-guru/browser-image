@@ -29,6 +29,8 @@ Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged
 
 Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-image.md`
 
+Один git-репозиторий [qa-guru/browser-image](https://github.com/qa-guru/browser-image) для Docker-образов браузерных нод Selenoid.
+
 ## Экосистема qa-guru Selenoid
 
 | Ресурс | Ссылка | Роль |
