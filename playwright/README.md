@@ -27,22 +27,22 @@ Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/q
 
 [![Playwright metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
-<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/">
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-dark.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-playwright-image-dark.png">
     <img
-      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview.png"
-      alt="Allure 3 dashboard — pyramid, stability, success distribution"
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-playwright-image.png"
+      alt="Allure 3 dashboard — Playwright nodes only (status, pyramid, dynamics, treemap)"
       width="800"
     />
   </picture>
 </a>
-> Dashboard PNG updates after each orchestrator run on `main` (Playwright screenshot of Allure 3 dashboard).
+> Component-filtered dashboard PNG (`@Component playwright-image` only). Updates after each orchestrator run on `main`.
 
 | Link | Description |
 |------|-------------|
 | [Awesome epic playwright-image](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Chromium / Firefox / WebKit node tests |
-| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
+| [Stack dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full Selenoid pyramid (all components) |
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
 

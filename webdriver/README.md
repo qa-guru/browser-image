@@ -13,22 +13,22 @@ Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Seleni
 
 [![WebDriver metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
-<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/">
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-dark.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-webdriver-image-dark.png">
     <img
-      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview.png"
-      alt="Allure 3 dashboard — pyramid, stability, success distribution"
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-webdriver-image.png"
+      alt="Allure 3 dashboard — WebDriver nodes only (status, pyramid, dynamics, treemap)"
       width="800"
     />
   </picture>
 </a>
-> Dashboard PNG updates after each orchestrator run on `main` (Playwright screenshot of Allure 3 dashboard).
+> Component-filtered dashboard PNG (`@Component webdriver-image` only). Updates after each orchestrator run on `main`.
 
 | Link | Description |
 |------|-------------|
 | [Awesome epic webdriver-image](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Chrome / Firefox / Edge node tests |
-| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
+| [Stack dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full Selenoid pyramid (all components) |
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
 

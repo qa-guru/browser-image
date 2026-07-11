@@ -3,7 +3,24 @@
 
 ## Automated Tests Dashboard
 
-Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged Allure (filter `@Component`):
+Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged Allure (filter `@Component`).
+
+### Stack overview
+
+[![Selenoid stack](https://qa-guru.github.io/selenoid-tests/readme/badge.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+[![Stack stats](https://qa-guru.github.io/selenoid-tests/readme/stats.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-dark.png">
+    <img
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview.png"
+      alt="Allure 3 dashboard — full Selenoid stack (all components)"
+      width="800"
+    />
+  </picture>
+</a>
 
 ### WebDriver browser nodes
 
@@ -13,6 +30,17 @@ Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged
 
 [![WebDriver metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-webdriver-image-dark.png">
+    <img
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-webdriver-image.png"
+      alt="Allure 3 dashboard — WebDriver nodes only"
+      width="800"
+    />
+  </picture>
+</a>
+
 ### Playwright browser nodes
 
 [![Playwright nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
@@ -21,21 +49,22 @@ Live SVG from [selenoid-tests](https://github.com/qa-guru/selenoid-tests) merged
 
 [![Playwright metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
-<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/">
+<a href="https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-dark.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-playwright-image-dark.png">
     <img
-      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview.png"
-      alt="Allure 3 dashboard — pyramid, stability, success distribution"
+      src="https://qa-guru.github.io/selenoid-tests/readme/dashboard-preview-playwright-image.png"
+      alt="Allure 3 dashboard — Playwright nodes only"
       width="800"
     />
   </picture>
 </a>
-> Dashboard PNG updates after each orchestrator run on `main` (Playwright screenshot of Allure 3 dashboard).
+
+> PNG previews update after each orchestrator run on `main` (full stack + per-component crops).
 
 | Link | Description |
 |------|-------------|
-| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
+| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid — all hub components |
 | [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Epic **webdriver-image** + **playwright-image** |
 | [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
