@@ -3,6 +3,13 @@
 
 ### WebDriver browser nodes
 
+Часть репозитория [`browser-image`](../README.md) (`webdriver/`). Playwright-образы — в [`playwright/`](../playwright/).
+
+Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Selenium server).
+
+
+## Automated Tests Dashboard
+
 [![WebDriver nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
 
 [![WebDriver stats](https://qa-guru.github.io/selenoid-tests/readme/stats-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
@@ -13,11 +20,8 @@
 |------|-------------|
 | [Awesome epic webdriver-image](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Chrome / Firefox / Edge node tests |
 | [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
+| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
 
-
-Часть репозитория [`browser-image`](../README.md) (`webdriver/`). Playwright-образы — в [`playwright/`](../playwright/).
-
-Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Selenium server).
 
 ## Браузеры
 

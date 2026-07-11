@@ -3,18 +3,6 @@
 
 ### Playwright browser nodes
 
-[![Playwright nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
-
-[![Playwright stats](https://qa-guru.github.io/selenoid-tests/readme/stats-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
-
-[![Playwright metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
-
-| Link | Description |
-|------|-------------|
-| [Awesome epic playwright-image](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Chromium / Firefox / WebKit node tests |
-| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
-
-
 Часть репозитория [`browser-image`](../README.md) (`playwright/`). WebDriver-образы — в [`webdriver/`](../webdriver/).
 
 Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/qa-guru/selenoid). Hub поднимает их по запросу и проксирует Playwright WebSocket на `/playwright/{browser}/{version}`.
@@ -31,6 +19,22 @@ Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/q
 | | |
 |---|---|
 | **GitHub** | [qa-guru/browser-image](https://github.com/qa-guru/browser-image) |
+
+
+## Automated Tests Dashboard
+
+[![Playwright nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Playwright stats](https://qa-guru.github.io/selenoid-tests/readme/stats-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Playwright metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+| Link | Description |
+|------|-------------|
+| [Awesome epic playwright-image](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Chromium / Firefox / WebKit node tests |
+| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
+| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
+
 | **Docker Hub** | [`qaguru/playwright-chromium`](https://hub.docker.com/r/qaguru/playwright-chromium), [`playwright-firefox`](https://hub.docker.com/r/qaguru/playwright-firefox), [`playwright-webkit`](https://hub.docker.com/r/qaguru/playwright-webkit), [`playwright-chrome`](https://hub.docker.com/r/qaguru/playwright-chrome), [`playwright-msedge`](https://hub.docker.com/r/qaguru/playwright-msedge) |
 
 ## Роль в экосистеме
