@@ -1,5 +1,21 @@
 # browser-image
 
+
+[![WebDriver nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Playwright nodes](https://qa-guru.github.io/selenoid-tests/readme/badge-playwright-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/)
+
+[![Browser nodes stats](https://qa-guru.github.io/selenoid-tests/readme/stats-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+[![Browser nodes metrics](https://qa-guru.github.io/selenoid-tests/readme/metrics-panel-webdriver-image.svg)](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/)
+
+| Link | Description |
+|------|-------------|
+| [Dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full pyramid |
+| [Awesome](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | **webdriver-image** + **playwright-image** epics |
+| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure |
+
+
 Один git-репозиторий [qa-guru/browser-image](https://github.com/qa-guru/browser-image) для Docker-образов браузерных нод Selenoid.
 
 ## Экосистема qa-guru Selenoid
