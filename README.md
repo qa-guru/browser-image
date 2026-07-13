@@ -1,5 +1,21 @@
 # browser-image
 
+<!-- stack-branches-note:start -->
+> ## Стабильные билды — две ветки
+>
+> Стабильные версии стека зафиксированы в **двух долгоживущих ветках** (а не в `main`):
+>
+> | Ветка | Стабильный билд | Docker API | Engine | Go |
+> |-------|-----------------|------------|--------|-----|
+> | `selenoid2-1.45-engine26.1-go1.23` | **v2.2.1** — прежний prod ([selenoid.autotests.cloud](https://selenoid.autotests.cloud)) | 1.45 | 26.1.x | 1.26.5 |
+> | `selenoid2-1.55-engine29-go1.26` | **v2.3.0** — актуальный, до нового UI (Selenoid 3) | 1.55 | 29.x | 1.26.5 |
+>
+> **Зачем две ветки:** каждая держит воспроизводимый набор версий. Обновление Docker Engine 26.1.x → 29.x (API 1.45 → 1.55) вынесено в отдельную ветку, чтобы прежний prod-стек собирался в любой момент. `main` — активная разработка, может меняться. Точные версии — в `STACK-PIN.md` в корне ветки.
+>
+> _Вы на ветке `selenoid2-1.45-engine26.1-go1.23`._
+<!-- stack-branches-note:end -->
+
+
 Один git-репозиторий [qa-guru/browser-image](https://github.com/qa-guru/browser-image) для Docker-образов браузерных нод Selenoid.
 
 ## Экосистема qa-guru Selenoid
