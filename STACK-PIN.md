@@ -12,7 +12,7 @@
 | Go (примечание) | Факт на теге v2.2.1 (`go.mod` + `toolchain go1.26.5`) |
 | React | 16 |
 | UI | CRA (react-scripts 3.x) |
-| Prod reference | selenoid.autotests.cloud (v2.2.x) |
+| Prod reference | rollback reference (бывший prod v2.2.1) |
 | До | Selenoid 3 UI — не трогать |
 | Git anchor | `e390f7d` (ecosystem v2.2.1) |
 | Image tags | `playwright/1.61.1`, `webdriver/chrome-149`, `webdriver/firefox-151`, `webdriver/msedge-145`, `video-recorder/1.0.0` |
