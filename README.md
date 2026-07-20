@@ -1,18 +1,18 @@
 # browser-image
 
 <!-- stack-branches-note:start -->
-> ## Стабильные билды — две ветки
->
-> Стабильные версии стека зафиксированы в **двух долгоживущих ветках** (а не в `main`). Имя ветки кодирует согласованный toolchain всего стека, включая React из paired `selenoid-ui`:
->
-> | Ветка | Стабильный билд | Docker API | Engine | Go | React | UI |
-> |-------|-----------------|------------|--------|-----|-------|-----|
-> | [`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.45-engine26.1-go1.26-react16) | **v2.2.1** — прежний prod ([selenoid.autotests.cloud](https://selenoid.autotests.cloud)) | 1.45 | 26.1.x | 1.26.5 | 16 | CRA (react-scripts 3.x) |
-> | [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.55-engine29.6-go1.26-react18) | **v2.3.0** — актуальный, до нового UI (Selenoid 3) | 1.55 | 29.6+ | 1.26.5 | 18 | Vite 6 |
->
-> **Зачем две ветки:** каждая держит воспроизводимый набор версий (Docker API / Engine / Go / React). `main` — активная разработка. Точные версии — в `STACK-PIN.md`.
->
-> _Вы на ветке [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.55-engine29.6-go1.26-react18)._
+## Стабильные билды — две ветки
+
+Стабильные версии стека зафиксированы в **двух долгоживущих ветках** (а не в `main`). Имя ветки кодирует согласованный toolchain всего стека, включая React из paired `selenoid-ui`:
+
+| Ветка | Стабильный билд | Docker API | Engine | Go | React | UI |
+|-------|-----------------|------------|--------|-----|-------|-----|
+| [`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.45-engine26.1-go1.26-react16) | **v2.2.1** — прежний prod ([selenoid.qa.guru](https://selenoid.qa.guru)) | 1.45 | 26.1.x | 1.26.5 | 16 | CRA (react-scripts 3.x) |
+| [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.55-engine29.6-go1.26-react18) | **v2.3.0** — актуальный, до нового UI (Selenoid 3) | 1.55 | 29.6+ | 1.26.5 | 18 | Vite 6 |
+
+**Зачем две ветки:** каждая держит воспроизводимый набор версий (Docker API / Engine / Go / React). `main` — активная разработка. Точные версии — в `STACK-PIN.md`.
+
+_Вы на ветке [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.55-engine29.6-go1.26-react18)._
 <!-- stack-branches-note:end -->
 
 
@@ -33,6 +33,7 @@
 |-------|--------|----------|--------------|
 | [`playwright/`](playwright/) | `qaguru/playwright-*` | `mcr.microsoft.com/playwright` + npm `@playwright/test` | Playwright nodes + `chromium-min` |
 | [`webdriver/`](webdriver/) | `qaguru/webdriver-chrome*` · `webdriver-firefox*` · `webdriver-msedge*` | CfT / Mozilla / Microsoft | warm (VNC) + min |
+| [`android/`](android/) | `qaguru/android:16` | Appium 3 + AVD API 36 (aerokube-style) | учебный Android · **Linux+KVM only** · [README](android/README.md) |
 | [`video-recorder/`](video-recorder/) | `qaguru/video-recorder` | fork `aerokube/images/selenium/video` | Selenoid `enableVideo` sidecar · deploy-smoke `testVideoRecorder` |
 
 **Twilio** (`twilio/selenoid`) — исторический legacy; в `browsers.json`, CI и сборке не используется.
@@ -53,6 +54,9 @@
 
 # Video recorder (Selenoid sidecar)
 ./video-recorder/scripts/build.sh
+
+# Android (API 36 / Appium — build on Mac OK; sessions need Linux+KVM)
+./android/scripts/build.sh 16
 ```
 
 ## Releases
@@ -65,6 +69,7 @@
 | Playwright min | `playwright/1.61.1-min` | `qaguru/playwright-chromium:1.61.1-min` |
 | WebDriver warm | `webdriver/chrome-149` · `webdriver/firefox-151` · `webdriver/msedge-145` | `qaguru/webdriver-*` |
 | WebDriver min | `webdriver/chrome-149-min` · `webdriver/firefox-151-min` · `webdriver/msedge-145-min` | `qaguru/webdriver-*:-min` |
+| Android | `android/16` | `qaguru/android:16` (API 36 · Linux+KVM runtime) |
 | Video recorder | `video-recorder/1.0.0` | `qaguru/video-recorder:1.0.0` · `:latest` |
 
 Публикация — `playwright/README.md`, `webdriver/README.md`. CI: `.github/workflows/`.

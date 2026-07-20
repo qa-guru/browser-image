@@ -1,0 +1,9 @@
+*
+!Dockerfile
+!entrypoint.sh
+!android.conf
+!Emulator.conf
+!fluxbox/
+!fluxbox/**
+!scripts/
+!README.md
