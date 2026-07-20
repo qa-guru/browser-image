@@ -16,7 +16,7 @@ SCREEN_RESOLUTION="${SCREEN_RESOLUTION:-1080x1920x24}"
 SKIN="${SKIN:-1080x1920}"
 VERBOSE="${VERBOSE:-}"
 AVD_NAME="${AVD_NAME:-android16}"
-BOOT_TIMEOUT_SEC="${BOOT_TIMEOUT_SEC:-180}"
+BOOT_TIMEOUT_SEC="${BOOT_TIMEOUT_SEC:-240}"
 STOP=""
 
 normalize_bool() {
@@ -53,6 +53,53 @@ clean() {
 
 trap clean SIGINT SIGTERM
 
+prepare_device() {
+  echo "Preparing emulator for Appium (unlock, settings, helpers)..."
+  adb wait-for-device
+  adb shell input keyevent KEYCODE_WAKEUP >/dev/null 2>&1 || true
+  adb shell wm dismiss-keyguard >/dev/null 2>&1 || true
+  adb shell input keyevent 82 >/dev/null 2>&1 || true
+  adb shell settings put global package_verifier_enable 0 >/dev/null 2>&1 || true
+  adb shell settings put secure user_setup_complete 1 >/dev/null 2>&1 || true
+  adb shell settings put global device_provisioned 1 >/dev/null 2>&1 || true
+  adb shell settings put system screen_off_timeout 2147483647 >/dev/null 2>&1 || true
+  adb shell settings put global animator_duration_scale 0 >/dev/null 2>&1 || true
+  adb shell settings put global transition_animation_scale 0 >/dev/null 2>&1 || true
+  adb shell settings put global window_animation_scale 0 >/dev/null 2>&1 || true
+  adb shell settings put global hidden_api_policy 1 >/dev/null 2>&1 || true
+
+  local i=0
+  while [[ "${i}" -lt 60 && -z "${STOP}" ]]; do
+    if adb shell pm path android >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+    i=$((i + 1))
+  done
+
+  # Preinstall UiAutomator2 helpers so New Session does not hang on dumpsys settings.
+  local settings_apk server_apk
+  settings_apk="$(find /root/.appium /opt/node_modules -name 'settings_apk-debug.apk' 2>/dev/null | head -1 || true)"
+  server_apk="$(find /root/.appium /opt/node_modules -name 'appium-uiautomator2-server-v*.apk' ! -name '*-signed.apk' 2>/dev/null | sort -V | tail -1 || true)"
+  if [[ -n "${settings_apk}" ]]; then
+    echo "Installing Appium Settings: ${settings_apk}"
+    adb install -r -g "${settings_apk}" >/dev/null 2>&1 || adb install -r "${settings_apk}" >/dev/null 2>&1 || true
+    adb shell pm grant io.appium.settings android.permission.WRITE_SECURE_SETTINGS >/dev/null 2>&1 || true
+    adb shell pm grant io.appium.settings android.permission.READ_PHONE_STATE >/dev/null 2>&1 || true
+    adb shell am start -n io.appium.settings/.Settings >/dev/null 2>&1 || true
+    sleep 2
+    adb shell am force-stop io.appium.settings >/dev/null 2>&1 || true
+  else
+    echo "WARN: settings_apk-debug.apk not found under .appium — first session may be slow" >&2
+  fi
+  if [[ -n "${server_apk}" ]]; then
+    echo "Installing UiAutomator2 server: ${server_apk}"
+    adb install -r "${server_apk}" >/dev/null 2>&1 || true
+  fi
+  sleep 3
+  echo "Device prepare done"
+}
+
 /usr/bin/xvfb-run -e /dev/stdout -l -n "${DISPLAY_NUM}" \
   -s "-ac -screen 0 ${SCREEN_RESOLUTION} -noreset -listen tcp" \
   /usr/bin/fluxbox -display "${DISPLAY}" -log /tmp/fluxbox.log 2>/dev/null &
@@ -85,7 +132,6 @@ ANDROID_AVD_HOME=/root/.android/avd DISPLAY="${DISPLAY}" \
   -no-audio \
   -no-jni \
   -accel on \
-  -writable-system \
   &
 EMULATOR_PID=$!
 
@@ -110,8 +156,10 @@ done
 [[ -n "${STOP}" ]] && exit 0
 
 echo "Emulator boot_completed after ${boot_elapsed}s"
+prepare_device
+[[ -n "${STOP}" ]] && exit 0
 
-DEFAULT_CAPABILITIES='"appium:androidNaturalOrientation": true, "appium:deviceName": "Android Emulator", "platformName": "Android", "appium:automationName": "UiAutomator2", "appium:noReset": true, "appium:udid": "'"${EMULATOR}"'", "appium:systemPort": '"${BOOTSTRAP_PORT}"', "appium:newCommandTimeout": 90'
+DEFAULT_CAPABILITIES='"appium:androidNaturalOrientation": true, "appium:deviceName": "Android Emulator", "platformName": "Android", "appium:automationName": "UiAutomator2", "appium:noReset": true, "appium:udid": "'"${EMULATOR}"'", "appium:systemPort": '"${BOOTSTRAP_PORT}"', "appium:newCommandTimeout": 120, "appium:adbExecTimeout": 120000, "appium:uiautomator2ServerInstallTimeout": 120000, "appium:uiautomator2ServerLaunchTimeout": 120000, "appium:ignoreHiddenApiPolicyError": true, "appium:skipLogcatCapture": true, "appium:autoGrantPermissions": true'
 
 # shellcheck disable=SC2086
 /opt/node_modules/.bin/appium \
