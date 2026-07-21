@@ -6,4 +6,7 @@
 !fluxbox/
 !fluxbox/**
 !scripts/
+!scripts/**
+!prepared/
+!prepared/**
 !README.md

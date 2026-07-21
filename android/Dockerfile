@@ -2,7 +2,7 @@
 # Runtime: Linux host with /dev/kvm only. Mac: build linux/amd64 OK; sessions — later / deferred.
 # No budtmo / sponsor Pro blobs. Not an Android device farm.
 
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS android-base
 
 ARG DEBIAN_FRONTEND=noninteractive
 # Stack canon: Node 24 (same as selenoid-ui CI). Appium 3 requires Node ^20.19 || ^22.12 || >=24.
@@ -109,15 +109,37 @@ RUN mksdcard "${SDCARD_SIZE}M" /sdcard.img \
          mv "/root/.android/avd/${AVD_NAME}.avd/userdata.img" \
             "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img"; \
        fi \
+    && sed -i \
+         -e 's/^hw.audioInput=.*/hw.audioInput=no/' \
+         -e 's/^hw.audioOutput=.*/hw.audioOutput=no/' \
+         -e 's/^hw.camera.back=.*/hw.camera.back=none/' \
+         -e 's/^hw.cpu.ncore=.*/hw.cpu.ncore=2/' \
+         -e 's/^hw.gpu.enabled=.*/hw.gpu.enabled=yes/' \
+         -e 's/^hw.gpu.mode=.*/hw.gpu.mode=swiftshader_indirect/' \
+         -e 's/^showDeviceFrame=.*/showDeviceFrame=no/' \
+         "$conf" \
     && rm -f "${ANDROID_HOME}/system-images/${PLATFORM}/${EMULATOR_IMAGE_TYPE}/${ANDROID_ABI}/userdata.img" \
     && rm -rf /tmp/* /root/.android/cache
 
 COPY Emulator.conf /tmp/Emulator.conf
 COPY entrypoint.sh /entrypoint.sh
+COPY scripts/prepare-avd.sh /prepare-avd.sh
 RUN mkdir -p "/root/.config/Android Open Source Project" \
     && mv /tmp/Emulator.conf "/root/.config/Android Open Source Project/Emulator.conf" \
-    && chmod +x /entrypoint.sh
+    && chmod +x /entrypoint.sh /prepare-avd.sh
 
 EXPOSE 4444 5900
 
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Production target. `scripts/prepare-image.sh` creates this deterministic
+# userdata on Linux+KVM; Docker commit is deliberately not part of the flow.
+FROM android-base AS prepared-runtime
+
+COPY prepared/android16.avd/ /root/.android/avd/android16.avd/
+COPY prepared/android16.ini /root/.android/avd/android16.ini
+COPY prepared/manifest.env /opt/qaguru/prepared-avd.env
+
+RUN test -s /root/.android/avd/android16.avd/userdata-qemu.img \
+    && test -s /opt/qaguru/prepared-avd.env \
+    && rm -f /root/.android/avd/android16.avd/*.lock
