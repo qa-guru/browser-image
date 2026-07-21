@@ -2,6 +2,9 @@
 # Selenoid Android node: Xvfb + emulator (KVM) + Appium UiAutomator2 + optional VNC.
 # ENABLE_VNC / ENABLE_VIDEO come from Selenoid caps (enableVNC / enableVideo).
 # Runtime requires Linux + /dev/kvm. Mac session support is deferred.
+#
+# No runtime adb install of Appium helpers — Appium installs them on New Session.
+# Hub must use a generous -session-attempt-timeout (default 30s is too short).
 set -euo pipefail
 
 BOOTSTRAP_PORT="${BOOTSTRAP_PORT:-4725}"
@@ -54,7 +57,6 @@ clean() {
 trap clean SIGINT SIGTERM
 
 adb_ok() {
-  # Never hang the entrypoint on a single adb call (hub startup budget is tight).
   timeout "${1:-15}" adb "${@:2}" >/dev/null 2>&1 || return 1
 }
 
@@ -64,6 +66,7 @@ quick_unlock() {
   adb_ok 10 shell wm dismiss-keyguard || true
   adb_ok 10 shell input keyevent 82 || true
   adb_ok 10 shell settings put global package_verifier_enable 0 || true
+  adb_ok 10 shell settings put global verifier_verify_adb_installs 0 || true
   adb_ok 10 shell settings put secure user_setup_complete 1 || true
   adb_ok 10 shell settings put global device_provisioned 1 || true
   adb_ok 10 shell settings put system screen_off_timeout 2147483647 || true
@@ -73,29 +76,9 @@ quick_unlock() {
   adb_ok 10 shell settings put global hidden_api_policy 1 || true
 }
 
-# Best-effort helpers; each install is hard-capped so Appium can start within hub timeout.
-prepare_helpers() {
-  echo "Preparing Appium helpers (timeout-capped)..."
-  local settings_apk server_apk
-  settings_apk="$(timeout 5 find /root/.appium -name 'settings_apk-debug.apk' 2>/dev/null | head -1 || true)"
-  server_apk="$(timeout 5 find /root/.appium -name 'appium-uiautomator2-server-v*.apk' ! -name '*-test.apk' ! -name '*-signed.apk' 2>/dev/null | sort -V | tail -1 || true)"
-  if [[ -n "${settings_apk}" ]]; then
-    echo "Installing Appium Settings: ${settings_apk}"
-    timeout 45 adb install -r -g "${settings_apk}" >/dev/null 2>&1 \
-      || timeout 45 adb install -r "${settings_apk}" >/dev/null 2>&1 \
-      || echo "WARN: settings apk install skipped/failed" >&2
-    adb_ok 10 shell pm grant io.appium.settings android.permission.WRITE_SECURE_SETTINGS || true
-  fi
-  if [[ -n "${server_apk}" ]]; then
-    echo "Installing UiAutomator2 server: ${server_apk}"
-    timeout 45 adb install -r "${server_apk}" >/dev/null 2>&1 \
-      || echo "WARN: uia2 server apk install skipped/failed" >&2
-  fi
-  echo "Helper prepare done"
-}
-
 start_appium() {
-  DEFAULT_CAPABILITIES='"appium:androidNaturalOrientation": true, "appium:deviceName": "Android Emulator", "platformName": "Android", "appium:automationName": "UiAutomator2", "appium:noReset": true, "appium:udid": "'"${EMULATOR}"'", "appium:systemPort": '"${BOOTSTRAP_PORT}"', "appium:newCommandTimeout": 120, "appium:adbExecTimeout": 120000, "appium:uiautomator2ServerInstallTimeout": 120000, "appium:uiautomator2ServerLaunchTimeout": 120000, "appium:ignoreHiddenApiPolicyError": true, "appium:skipLogcatCapture": true, "appium:autoGrantPermissions": true'
+  # Install timeouts leave room for first-session helper APK install under API 36.
+  DEFAULT_CAPABILITIES='"appium:androidNaturalOrientation": true, "appium:deviceName": "Android Emulator", "platformName": "Android", "appium:automationName": "UiAutomator2", "appium:noReset": true, "appium:udid": "'"${EMULATOR}"'", "appium:systemPort": '"${BOOTSTRAP_PORT}"', "appium:newCommandTimeout": 180, "appium:adbExecTimeout": 180000, "appium:uiautomator2ServerInstallTimeout": 180000, "appium:uiautomator2ServerLaunchTimeout": 180000, "appium:ignoreHiddenApiPolicyError": true, "appium:skipLogcatCapture": true, "appium:autoGrantPermissions": true'
 
   # shellcheck disable=SC2086
   /opt/node_modules/.bin/appium \
@@ -108,6 +91,18 @@ start_appium() {
     --default-capabilities "{${DEFAULT_CAPABILITIES}}" &
   APPIUM_PID=$!
   echo "Appium starting pid=${APPIUM_PID}"
+
+  # Wait until Appium HTTP is up (hub service-startup-timeout).
+  local i=0
+  while [[ "${i}" -lt 60 && -z "${STOP}" ]]; do
+    if curl -sf "http://127.0.0.1:${PORT}/wd/hub/status" >/dev/null 2>&1; then
+      echo "Appium /wd/hub/status OK after ${i}s"
+      return 0
+    fi
+    sleep 1
+    i=$((i + 1))
+  done
+  echo "WARN: Appium status not ready within 60s — hub may still connect" >&2
 }
 
 /usr/bin/xvfb-run -e /dev/stdout -l -n "${DISPLAY_NUM}" \
@@ -167,9 +162,6 @@ done
 
 echo "Emulator boot_completed after ${boot_elapsed}s"
 quick_unlock
-# Start Appium ASAP so Selenoid -service-startup-timeout sees /wd/hub.
 start_appium
-# Helpers after Appium is up (capped); must not block hub readiness.
-prepare_helpers
 
 wait
