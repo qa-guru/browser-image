@@ -74,6 +74,26 @@ curl -s -X POST http://127.0.0.1:4444/wd/hub/session \
 
 Video: `enableVideo: true` + `qaguru/video-recorder`. VNC пароль: `selenoid`.
 
+## Учебная manual-сессия
+
+1. Открыть Selenoid UI и перейти в **Capabilities**.
+2. Выбрать `android` → `16.0`.
+3. Включить **VNC** и **Video**, затем нажать **Create Session**.
+4. Дождаться cold start (обычно 70–90 секунд) и открыть VNC.
+5. После демонстрации завершить сессию. MP4 появится в списке записей Selenoid.
+
+Для демонстрации своего APK добавить capability:
+
+```json
+{
+  "appium:app": "https://example.org/app-debug.apk",
+  "appium:noReset": false
+}
+```
+
+APK должен быть доступен контейнеру по HTTP(S). Это disposable-сессия: после её
+завершения контейнер и установленное приложение удаляются.
+
 Канонический benchmark на самом Selenoid-хосте:
 
 ```bash
