@@ -29,8 +29,8 @@ docker run --rm \
   --device /dev/kvm \
   --security-opt seccomp=unconfined \
   --shm-size 2g \
-  --memory 4g \
-  --cpus 2 \
+  --memory 6g \
+  --cpus 4 \
   -e "HOST_UID=$(id -u)" \
   -e "HOST_GID=$(id -g)" \
   -v "${OUTPUT}:/prepared" \

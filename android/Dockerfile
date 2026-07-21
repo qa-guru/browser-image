@@ -110,15 +110,17 @@ RUN mksdcard "${SDCARD_SIZE}M" /sdcard.img \
          mv "/root/.android/avd/${AVD_NAME}.avd/userdata.img" \
             "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img"; \
        fi \
-    && sed -i \
-         -e 's/^hw.audioInput=.*/hw.audioInput=no/' \
-         -e 's/^hw.audioOutput=.*/hw.audioOutput=no/' \
-         -e 's/^hw.camera.back=.*/hw.camera.back=none/' \
-         -e 's/^hw.cpu.ncore=.*/hw.cpu.ncore=2/' \
-         -e 's/^hw.gpu.enabled=.*/hw.gpu.enabled=yes/' \
-         -e 's/^hw.gpu.mode=.*/hw.gpu.mode=swiftshader_indirect/' \
-         -e 's/^showDeviceFrame=.*/showDeviceFrame=no/' \
+    && sed -i -E \
+         -e 's/^hw\.audioInput.*/hw.audioInput=no/' \
+         -e 's/^hw\.audioOutput.*/hw.audioOutput=no/' \
+         -e 's/^hw\.camera\.back.*/hw.camera.back=none/' \
+         -e 's/^hw\.cpu\.ncore.*/hw.cpu.ncore=4/' \
+         -e 's/^hw\.gpu\.enabled.*/hw.gpu.enabled=yes/' \
+         -e 's/^hw\.gpu\.mode.*/hw.gpu.mode=swiftshader_indirect/' \
+         -e 's/^showDeviceFrame.*/showDeviceFrame=no/' \
          "$conf" \
+    && if grep -qE '^hw\.ramSize' "$conf"; then sed -i -E 's/^hw\.ramSize.*/hw.ramSize=6144M/' "$conf"; else echo 'hw.ramSize=6144M' >> "$conf"; fi \
+    && if grep -qE '^vm\.heapSize' "$conf"; then sed -i -E 's/^vm\.heapSize.*/vm.heapSize=512M/' "$conf"; else echo 'vm.heapSize=512M' >> "$conf"; fi \
     && rm -f "${ANDROID_HOME}/system-images/${PLATFORM}/${EMULATOR_IMAGE_TYPE}/${ANDROID_ABI}/userdata.img" \
     && rm -rf /tmp/* /root/.android/cache
 

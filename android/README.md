@@ -121,7 +121,7 @@ APP_URL=https://github.com/appium/android-apidemos/releases/download/v6.0.1/ApiD
 
 ## Измеренный cold timeline — prod Linux+KVM
 
-Дата: **2026-07-21**, `selenoid.qa.guru`, 2 vCPU / container limit, 4 GiB container memory, VNC `1080x1920x24` (benchmark canvas; current default is `2100x2100x24`).
+Дата: **2026-07-21**, `selenoid.qa.guru`, then 2 vCPU / 4 GiB (benchmark). Current prod default: **4 vCPU / 6 GiB**, guest `hw.ramSize=6144M`, VNC canvas `2100x2100x24`.
 
 Baseline до оптимизации:
 

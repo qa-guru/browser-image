@@ -117,6 +117,12 @@ avd_dir="/root/.android/avd/${AVD_NAME}.avd"
 userdata="${avd_dir}/userdata-qemu.img"
 [[ -s "${userdata}" ]] || { echo "ERROR: emulator did not create ${userdata}" >&2; exit 1; }
 
+# Guest RAM/CPU for System UI headroom (matches browsers.json mem/cpu).
+conf="${avd_dir}/config.ini"
+if grep -qE '^hw\.ramSize' "${conf}"; then sed -i -E 's/^hw\.ramSize.*/hw.ramSize=6144M/' "${conf}"; else echo 'hw.ramSize=6144M' >> "${conf}"; fi
+if grep -qE '^vm\.heapSize' "${conf}"; then sed -i -E 's/^vm\.heapSize.*/vm.heapSize=512M/' "${conf}"; else echo 'vm.heapSize=512M' >> "${conf}"; fi
+if grep -qE '^hw\.cpu\.ncore' "${conf}"; then sed -i -E 's/^hw\.cpu\.ncore.*/hw.cpu.ncore=4/' "${conf}"; else echo 'hw.cpu.ncore=4' >> "${conf}"; fi
+
 rm -rf "${OUTPUT_DIR:?}/${AVD_NAME}.avd"
 mkdir -p "${OUTPUT_DIR}/${AVD_NAME}.avd"
 rm -f "${avd_dir}"/*.lock "${avd_dir}"/cache.img* "${avd_dir}"/hardware-qemu.ini
