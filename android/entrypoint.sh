@@ -219,9 +219,13 @@ if [[ "${ENABLE_VNC}" != "true" && "${ENABLE_VIDEO}" != "true" ]]; then
 fi
 
 # shellcheck disable=SC2086
+# Force guest RAM explicitly: emulator otherwise clamps hw.ramSize using host
+# /proc/meminfo heuristics (cgroup limits are invisible → ~2560M).
 ANDROID_AVD_HOME=/root/.android/avd DISPLAY="${DISPLAY}" \
   "${ANDROID_HOME}/emulator/emulator" ${EMULATOR_ARGS} \
   -avd "${AVD_NAME}" \
+  -memory 6144 \
+  -cores 4 \
   -sdcard /sdcard.img \
   -skin "${SKIN}" \
   -fixed-scale \

@@ -29,6 +29,8 @@ trap clean EXIT
 ANDROID_AVD_HOME=/root/.android/avd \
   "${ANDROID_HOME}/emulator/emulator" \
   -avd "${AVD_NAME}" \
+  -memory 6144 \
+  -cores 4 \
   -sdcard /sdcard.img \
   -skin 1080x1920 \
   -gpu swiftshader_indirect \
