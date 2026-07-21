@@ -8,7 +8,7 @@
 | Appium | **3.5.2** |
 | UiAutomator2 | **8.1.0** |
 | AVD | API 36 · `google_apis` · **x86_64** · skin `1080x1920` |
-| Xvfb / VNC canvas | **`1080x1920x24`** (portrait, matches phone skin; not browser landscape) |
+| Xvfb / VNC canvas | **`2100x2100x24`** (square: skin + Qt title/toolbar margin; portrait + landscape) |
 
 | Docker | Назначение |
 |--------|------------|
@@ -55,6 +55,19 @@ Snapshot policy — явный `-no-snapshot`: userdata подготовлен, 
 ## browsers.json (SSOT)
 
 `dev/browsers.json` → `android` / `16.0` → `qaguru/android:16`. После правок: `dev/scripts/sync-cm-browsers.sh`.
+
+Env по умолчанию: `SCREEN_RESOLUTION=2100x2100x24` (квадратный VNC-canvas с запасом под Qt chrome). Skin эмулятора остаётся `1080x1920`.
+
+## VNC / desktop
+
+| Проблема | Фикс |
+|---|---|
+| Лого растянуто | Wallpaper `aerokube.png` **2100×2100**, Fluxbox `background: aspect` + `feh --bg-center` |
+| Маленький phone + пустой desktop | Эмулятор `-fixed-scale` (окно 1:1 к skin `1080x1920`); deco off; raise loop |
+| Низ телефона обрезан | Canvas `2100²` = skin + title/toolbar margin (не skin alone `1920²`) |
+| Landscape во время сессии | Тот же квадрат вмещает portrait (`~1150×1970`) и landscape (`~1990×1130`); окно pinned **слева снизу** (не прыгает в top-left) |
+
+Пересборка образа нужна для wallpaper/`apps`/entrypoint. Смена только `SCREEN_RESOLUTION` в `browsers.json` — достаточно sync + reload Selenoid config (без rebuild), если image уже с новым entrypoint.
 
 ## Smoke (Linux+KVM)
 
@@ -108,7 +121,7 @@ APP_URL=https://github.com/appium/android-apidemos/releases/download/v6.0.1/ApiD
 
 ## Измеренный cold timeline — prod Linux+KVM
 
-Дата: **2026-07-21**, `selenoid.qa.guru`, 2 vCPU / container limit, 4 GiB container memory, VNC `1080x1920x24`.
+Дата: **2026-07-21**, `selenoid.qa.guru`, 2 vCPU / container limit, 4 GiB container memory, VNC `1080x1920x24` (benchmark canvas; current default is `2100x2100x24`).
 
 Baseline до оптимизации:
 

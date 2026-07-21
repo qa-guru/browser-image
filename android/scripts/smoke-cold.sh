@@ -102,7 +102,7 @@ run_session() {
   durations+=("${response_ms}")
 }
 
-base_payload='{"capabilities":{"alwaysMatch":{"browserName":"android","browserVersion":"16.0","selenoid:options":{"enableVNC":true,"screenResolution":"1080x1920x24"}}}}'
+base_payload='{"capabilities":{"alwaysMatch":{"browserName":"android","browserVersion":"16.0","selenoid:options":{"enableVNC":true,"screenResolution":"2100x2100x24"}}}}'
 durations=()
 for i in $(seq 1 "${COUNT}"); do
   run_session "cold-${i}" "${base_payload}"
@@ -122,7 +122,7 @@ if [[ -n "${APP_URL}" ]]; then
       browserVersion:"16.0",
       "appium:app":$app,
       "appium:noReset":false,
-      "selenoid:options":{enableVNC:true,screenResolution:"1080x1920x24"}
+      "selenoid:options":{enableVNC:true,screenResolution:"2100x2100x24"}
     }}
   }')"
   run_session "app-url-no-reset-false" "${app_payload}"

@@ -7,11 +7,11 @@
 #
 ############################################################## BACKGROUND ######
 
-# background: 					flat
-# background.color: 				#2c001e
-# background.colorTo:				#2c001e
-
-background:             fullscreen
+# aspect = keep logo proportions (never stretch). Canvas is square 2100²
+# (skin + Qt title/toolbar margin); wallpaper PNG matches that size.
+background:             aspect
+background.color:       #c1c1c1
+background.colorTo:     #c1c1c1
 background.pixmap:      /usr/share/images/fluxbox/aerokube.png
 
 ############################################################## FONTS ##########

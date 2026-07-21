@@ -14,14 +14,16 @@ EMULATOR_ARGS="${EMULATOR_ARGS:-}"
 PORT="${PORT:-4444}"
 DISPLAY_NUM="${DISPLAY_NUM:-99}"
 export DISPLAY=":${DISPLAY_NUM}"
-# Portrait canvas matching phone skin (not landscape browser desktop).
-SCREEN_RESOLUTION="${SCREEN_RESOLUTION:-1080x1920x24}"
+# Square VNC canvas: skin 1080x1920 + Qt title/toolbar chrome in portrait AND landscape.
+# 2100² = max(skin)+chrome margin (~title 48 + side toolbar 72 + pad); wallpaper matches.
+SCREEN_RESOLUTION="${SCREEN_RESOLUTION:-2100x2100x24}"
 SKIN="${SKIN:-1080x1920}"
 VERBOSE="${VERBOSE:-}"
 AVD_NAME="${AVD_NAME:-android16}"
 BOOT_TIMEOUT_SEC="${BOOT_TIMEOUT_SEC:-240}"
 STOP=""
 START_EPOCH_MS="$(date +%s%3N)"
+FIT_EMULATOR_PID=""
 
 timeline() {
   local now
@@ -55,10 +57,37 @@ fi
 
 clean() {
   STOP="yes"
+  [[ -n "${FIT_EMULATOR_PID:-}" ]] && kill -TERM "${FIT_EMULATOR_PID}" 2>/dev/null || true
   [[ -n "${APPIUM_PID:-}" ]] && kill -TERM "${APPIUM_PID}" 2>/dev/null || true
   [[ -n "${EMULATOR_PID:-}" ]] && kill -TERM "${EMULATOR_PID}" 2>/dev/null || true
   [[ -n "${X11VNC_PID:-}" ]] && kill -TERM "${X11VNC_PID}" 2>/dev/null || true
   [[ -n "${XVFB_PID:-}" ]] && kill -TERM "${XVFB_PID}" 2>/dev/null || true
+}
+
+# Keep the Qt phone window on top through portrait ↔ landscape resizes.
+# Prefer "Android Emulator - …" — bare title "Emulator" is a separate empty shell.
+# Size stays 1:1 skin (-fixed-scale); pin bottom-left so rotate does not jump to top-left.
+fit_emulator_window_loop() {
+  local win="" win_w="" win_h="" screen_h=""
+  screen_h="$(printf '%s' "${SCREEN_RESOLUTION}" | cut -dx -f2)"
+  while [[ -z "${STOP}" ]]; do
+    win="$(DISPLAY="${DISPLAY}" wmctrl -l 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /Android Emulator -/ {print $1; exit}')"
+    if [[ -z "${win}" ]]; then
+      win="$(DISPLAY="${DISPLAY}" wmctrl -l 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /Android Emulator/ {print $1; exit}')"
+    fi
+    if [[ -n "${win}" ]]; then
+      # wmctrl -lG: id desk x y w h host title…
+      win_w="$(DISPLAY="${DISPLAY}" wmctrl -lG 2>/dev/null | awk -v id="${win}" '$1==id {print $5; exit}')"
+      win_h="$(DISPLAY="${DISPLAY}" wmctrl -lG 2>/dev/null | awk -v id="${win}" '$1==id {print $6; exit}')"
+      if [[ -n "${win_w}" && -n "${win_h}" && -n "${screen_h}" ]]; then
+        # Bottom-left anchor: x=0, y = canvas_h - window_h (−1 keeps size).
+        DISPLAY="${DISPLAY}" wmctrl -i -r "${win}" -e "0,0,$((screen_h - win_h)),-1,-1" 2>/dev/null || true
+      fi
+      DISPLAY="${DISPLAY}" wmctrl -i -r "${win}" -b add,above 2>/dev/null || true
+      DISPLAY="${DISPLAY}" wmctrl -i -a "${win}" 2>/dev/null || true
+    fi
+    sleep 1
+  done
 }
 
 trap clean SIGINT SIGTERM
@@ -181,6 +210,10 @@ until [[ "${retcode}" -eq 0 || -n "${STOP}" ]]; do
 done
 [[ -n "${STOP}" ]] && exit 0
 
+# Render wallpaper reliably (fluxbox style `background` is flaky under Xvfb).
+# --bg-center keeps the 2100² wallpaper at native size — no stretch, logo undistorted.
+DISPLAY="${DISPLAY}" feh --no-fehbg --bg-center /usr/share/images/fluxbox/aerokube.png 2>/dev/null || true
+
 if [[ "${ENABLE_VNC}" != "true" && "${ENABLE_VIDEO}" != "true" ]]; then
   EMULATOR_ARGS="${EMULATOR_ARGS} -no-window"
 fi
@@ -191,6 +224,7 @@ ANDROID_AVD_HOME=/root/.android/avd DISPLAY="${DISPLAY}" \
   -avd "${AVD_NAME}" \
   -sdcard /sdcard.img \
   -skin "${SKIN}" \
+  -fixed-scale \
   -gpu swiftshader_indirect \
   -no-snapshot \
   -no-boot-anim \
@@ -206,6 +240,11 @@ if [[ "${ENABLE_VNC}" == "true" ]]; then
   x11vnc -display "${DISPLAY}" -passwd selenoid -shared -forever -loop500 \
     -rfbport 5900 -rfbportv6 5900 -logfile /tmp/x11vnc.log &
   X11VNC_PID=$!
+fi
+
+if [[ "${ENABLE_VNC}" == "true" || "${ENABLE_VIDEO}" == "true" ]]; then
+  fit_emulator_window_loop &
+  FIT_EMULATOR_PID=$!
 fi
 
 adb_elapsed=0

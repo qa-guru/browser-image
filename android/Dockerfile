@@ -70,6 +70,7 @@ RUN npm install --prefix /opt "appium@${APPIUM_VERSION}" \
 COPY android.conf /etc/ld.so.conf.d/android.conf
 COPY fluxbox/aerokube /usr/share/fluxbox/styles/aerokube
 COPY fluxbox/init /root/.fluxbox/init
+COPY fluxbox/apps /root/.fluxbox/apps
 COPY fluxbox/aerokube.png /usr/share/images/fluxbox/aerokube.png
 
 RUN mkdir -p /opt/android-sdk-linux /root/.config/"Android Open Source Project" \
