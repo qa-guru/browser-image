@@ -67,8 +67,12 @@ clean() {
 # Keep the Qt phone window on top through portrait ↔ landscape resizes.
 # Prefer "Android Emulator - …" — bare title "Emulator" is a separate empty shell.
 # Size stays 1:1 skin (-fixed-scale); pin bottom-left so rotate does not jump to top-left.
+#
+# CRITICAL: never pass wmctrl size as -1,-1. Each such call grows the Qt window by
+# ~25px and shifts it up — VNC looks like the image jerking upward. Pass explicit w,h.
+# Re-pin only when size changes (orientation); do not -e/-a every tick.
 fit_emulator_window_loop() {
-  local win="" win_w="" win_h="" screen_h=""
+  local win="" win_w="" win_h="" screen_h="" target_y="" pinned_w="" pinned_h=""
   screen_h="$(printf '%s' "${SCREEN_RESOLUTION}" | cut -dx -f2)"
   while [[ -z "${STOP}" ]]; do
     win="$(DISPLAY="${DISPLAY}" wmctrl -l 2>/dev/null | awk 'BEGIN{IGNORECASE=1} /Android Emulator -/ {print $1; exit}')"
@@ -80,11 +84,21 @@ fit_emulator_window_loop() {
       win_w="$(DISPLAY="${DISPLAY}" wmctrl -lG 2>/dev/null | awk -v id="${win}" '$1==id {print $5; exit}')"
       win_h="$(DISPLAY="${DISPLAY}" wmctrl -lG 2>/dev/null | awk -v id="${win}" '$1==id {print $6; exit}')"
       if [[ -n "${win_w}" && -n "${win_h}" && -n "${screen_h}" ]]; then
-        # Bottom-left anchor: x=0, y = canvas_h - window_h (−1 keeps size).
-        DISPLAY="${DISPLAY}" wmctrl -i -r "${win}" -e "0,0,$((screen_h - win_h)),-1,-1" 2>/dev/null || true
+        if [[ "${win_w}" != "${pinned_w}" || "${win_h}" != "${pinned_h}" ]]; then
+          if [[ "${screen_h}" -gt "${win_h}" ]]; then
+            target_y=$((screen_h - win_h))
+          else
+            target_y=0
+          fi
+          DISPLAY="${DISPLAY}" wmctrl -i -r "${win}" -e "0,0,${target_y},${win_w},${win_h}" 2>/dev/null || true
+          DISPLAY="${DISPLAY}" wmctrl -i -r "${win}" -b add,above 2>/dev/null || true
+          pinned_w="${win_w}"
+          pinned_h="${win_h}"
+        fi
       fi
-      DISPLAY="${DISPLAY}" wmctrl -i -r "${win}" -b add,above 2>/dev/null || true
-      DISPLAY="${DISPLAY}" wmctrl -i -a "${win}" 2>/dev/null || true
+    else
+      pinned_w=""
+      pinned_h=""
     fi
     sleep 1
   done
