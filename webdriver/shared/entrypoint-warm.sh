@@ -38,6 +38,7 @@ wait_for_x() {
 
 cleanup() {
   terminate_pid "${driver_pid:-}"
+  terminate_pid "${devtools_proxy_pid:-}"
   terminate_pid "${vnc_pid:-}"
   terminate_pid "${xvfb_pid:-}"
 }
@@ -60,6 +61,14 @@ if [[ "${ENABLE_VNC}" == "true" ]]; then
     -passwd selenoid \
     >/dev/null 2>&1 &
   vnc_pid=$!
+fi
+
+# Static CDP proxy on 7070: bridges the hub (hub-HAR / se:cdp / /devtools/<id>/)
+# to chromedriver's RANDOM --remote-debugging-port. Optional binary — absence
+# must not break the session.
+if command -v devtools-proxy >/dev/null 2>&1; then
+  devtools-proxy &
+  devtools_proxy_pid=$!
 fi
 
 chromedriver \

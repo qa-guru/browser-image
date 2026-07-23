@@ -21,8 +21,32 @@ Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Seleni
 
 | Variant | Назначение |
 |---------|------------|
-| **warm** | prod, UI, VNC (`ENABLE_VNC=true`, порт 5900, пароль `selenoid`) |
-| **min** | headless CI |
+| **warm** | prod, UI, VNC (`ENABLE_VNC=true`, порт 5900, пароль `selenoid`); DevTools-прокси на 7070 |
+| **min** | headless CI (без 7070 — by design) |
+
+## DevTools / CDP на 7070 (warm chrome + msedge)
+
+Warm-образы Chrome и Edge поднимают статический CDP-прокси
+(`shared/devtools-proxy/`, собирается в `Dockerfile.warm` под обе арки) на
+контейнерном порту `7070`. chromedriver/msedgedriver запускает браузер с
+`--remote-debugging-port=0`, поэтому браузер сам выбирает **случайный**
+эфемерный порт и пишет его в `<user-data-dir>/DevToolsActivePort`. Прокси
+self-sufficient — не зависит от wrapper'а:
+
+- **порт** — обнаруживает через `/proc` (по `--user-data-dir` живого процесса
+  браузера) + чтение `DevToolsActivePort`, с fallback-глобом по `/tmp`;
+- **Origin** — снимает заголовок `Origin` при форварде, поэтому Chrome 111+
+  принимает CDP-handshake без `--remote-allow-origins`;
+- **Host** — переписывает на loopback (DNS-rebinding guard Chrome).
+
+Это включает hub-HAR (`enableHAR=true`), `se:cdp` и `/devtools/<session-id>/`.
+Firefox и `-min` порт 7070 не поднимают.
+
+| Путь на :7070 | Назначение |
+|---------------|-----------|
+| `ws /page` | page-таргет — hub-HAR (`ws://<host:7070>/page`) |
+| `ws /` · `ws /browser` | browser-таргет — `se:cdp`, `/devtools/<id>/` |
+| `http /json*` | DevTools HTTP API (passthrough) |
 
 ## Build
 

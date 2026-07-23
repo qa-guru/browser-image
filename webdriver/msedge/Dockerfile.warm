@@ -4,6 +4,15 @@ ARG EDGE_MAJOR=145
 FROM alpine:3.21 AS init
 RUN apk add --no-cache dumb-init
 
+# Static CDP proxy for container port 7070 (hub-HAR / se:cdp / /devtools/<id>/).
+# msedge images are amd64-only; cross-compile on the build host, no CGO.
+FROM --platform=$BUILDPLATFORM golang:1.26.5-bookworm AS devtools-proxy
+ARG TARGETARCH
+WORKDIR /src
+COPY shared/devtools-proxy/ ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags='-s -w' -o /devtools-proxy .
+
 FROM debian:bookworm
 ARG DEBIAN_FRONTEND=noninteractive
 ARG EDGE_VERSION
@@ -28,15 +37,16 @@ RUN set -eux \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
+COPY --from=devtools-proxy /devtools-proxy /usr/local/bin/devtools-proxy
 RUN rm -f /usr/bin/microsoft-edge-stable
 COPY shared/msedge-wrapper.sh /usr/bin/microsoft-edge-stable
 RUN chmod +x /usr/bin/microsoft-edge-stable
 COPY shared/common.sh shared/entrypoint-msedgedriver-warm.sh /opt/webdriver/
 RUN chmod +x /opt/webdriver/common.sh /opt/webdriver/entrypoint-msedgedriver-warm.sh
 
-EXPOSE 4444 5900
+EXPOSE 4444 5900 7070
 HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=6     CMD curl -sf "http://127.0.0.1:${EDGEDRIVER_PORT}/status" >/dev/null || exit 1
 
-LABEL org.opencontainers.image.title="qaguru/webdriver-msedge"       io.qaguru.browser="msedge" io.qaguru.protocol="webdriver" io.qaguru.variant="warm"       io.qaguru.edge.version="${EDGE_VERSION}"
+LABEL org.opencontainers.image.title="qaguru/webdriver-msedge"       io.qaguru.browser="msedge" io.qaguru.protocol="webdriver" io.qaguru.variant="warm"       io.qaguru.devtools.port="7070"       io.qaguru.edge.version="${EDGE_VERSION}"
 
 ENTRYPOINT ["dumb-init", "--", "/opt/webdriver/entrypoint-msedgedriver-warm.sh"]
