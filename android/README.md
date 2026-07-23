@@ -12,7 +12,10 @@
 
 | Docker | Назначение |
 |--------|------------|
+| `qaguru/android:11` … `:15` | Android 11–15 / API 30–35 · Linux+KVM |
 | `qaguru/android:16` | Android 16 / API 36 · Linux+KVM |
+
+Тег образа = major (`11.0` в browsers.json → `:11`). Сборка всех 11–15: `./scripts/build-all.sh` (Linux+KVM).
 
 Основа паттерна — [aerokube/images selenium/android](https://github.com/aerokube/images/tree/master/selenium/android) (Apache 2.0). **Без** budtmo / sponsor Pro blobs.
 
@@ -54,7 +57,7 @@ Snapshot policy — явный `-no-snapshot`: userdata подготовлен, 
 
 ## browsers.json (SSOT)
 
-`dev/browsers.json` → `android` / `16.0` → `qaguru/android:16`. После правок: `dev/scripts/sync-cm-browsers.sh`.
+`dev/browsers.json` → `android` **4.4 + 10.0–16.0** (8 версий), default **10.0** (`selenoid/android:10.0`); **11.0–16.0** → `qaguru/android:11`…`:16`. Legacy aerokube: только **`4.4`**. Prod: `dev/browsers-production.json`. После правок: `dev/scripts/sync-cm-browsers.sh`.
 
 Env по умолчанию: `SCREEN_RESOLUTION=2100x2100x24` (квадратный VNC-canvas с запасом под Qt chrome). Skin эмулятора остаётся `1080x1920`.
 

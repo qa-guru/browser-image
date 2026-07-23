@@ -12,7 +12,7 @@
 | Go (примечание) | Факт на cut v2.3.0 (`go.mod` + `toolchain go1.26.5`) |
 | React | 18 |
 | UI | Vite 6 |
-| Prod reference | [selenoid.autotests.cloud](https://selenoid.autotests.cloud) — пример стенда v2.3.0 |
+| Prod reference | [selenoid.qa.guru](https://selenoid.qa.guru) — пример стенда v2.3.0 |
 | До | До фазы 3 / Selenoid 3 UI (selenoid.qa.guru) |
 | Git anchor | `main` |
 | Image tags | текущие `playwright/*`, `webdriver/*`, `video-recorder/*` на HEAD |

@@ -6,7 +6,7 @@ set -euo pipefail
 AVD_NAME="${AVD_NAME:-android16}"
 EMULATOR="${EMULATOR:-emulator-5554}"
 OUTPUT_DIR="${OUTPUT_DIR:-/prepared}"
-BOOT_TIMEOUT_SEC="${BOOT_TIMEOUT_SEC:-300}"
+BOOT_TIMEOUT_SEC="${BOOT_TIMEOUT_SEC:-600}"
 SERVER_DIR="/root/.appium/node_modules/appium-uiautomator2-driver/node_modules/appium-uiautomator2-server/apks"
 SETTINGS_APK="/root/.appium/node_modules/appium-uiautomator2-driver/node_modules/io.appium.settings/apks/settings_apk-debug.apk"
 SERVER_APK="${SERVER_DIR}/appium-uiautomator2-server-v10.3.2.apk"
@@ -25,6 +25,18 @@ clean() {
   [[ -n "${EMULATOR_PID:-}" ]] && wait "${EMULATOR_PID}" 2>/dev/null || true
 }
 trap clean EXIT
+
+avd_dir="/root/.android/avd/${AVD_NAME}.avd"
+conf="${avd_dir}/config.ini"
+userdata="${avd_dir}/userdata-qemu.img"
+rm -f "${userdata}.qcow2"
+if [[ ! -s "${userdata}" ]] || [[ "$(stat -c%s "${userdata}" 2>/dev/null || echo 0)" -lt 10485760 ]]; then
+  rm -f "${userdata}"
+  qemu-img create -f qcow2 "${userdata}" 1536M
+fi
+if grep -q 'disk.dataPartition.path=<temp>' "${conf}" 2>/dev/null; then
+  sed -i "s|^disk.dataPartition.path=<temp>|disk.dataPartition.path=${userdata}|" "${conf}"
+fi
 
 ANDROID_AVD_HOME=/root/.android/avd \
   "${ANDROID_HOME}/emulator/emulator" \

@@ -11,9 +11,11 @@ ARG UIAUTOMATOR2_VERSION=8.1.0
 ARG ANDROID_CMDTOOLS_VERSION=11076708
 ARG AVD_NAME=android16
 ARG PLATFORM=android-36
+ARG DEVICE=pixel_6
 ARG EMULATOR_IMAGE_TYPE=google_apis
 ARG ANDROID_ABI=x86_64
 ARG BUILD_TOOLS=build-tools;35.0.0
+# browsers.json browserVersion → image tag: 11.0→11 … 16.0→16 (see scripts/version-map.sh)
 ARG SDCARD_SIZE=512
 ARG USERDATA_SIZE=1536
 
@@ -98,7 +100,7 @@ RUN mksdcard "${SDCARD_SIZE}M" /sdcard.img \
          -n "${AVD_NAME}" \
          -k "${EMULATOR_IMAGE}" \
          --abi "${ANDROID_ABI}" \
-         --device pixel_6 \
+         --device "${DEVICE}" \
     && test -d "/root/.android/avd/${AVD_NAME}.avd" \
     && conf="/root/.android/avd/${AVD_NAME}.avd/config.ini" \
     && if grep -q '^disk.dataPartition.size=' "$conf" 2>/dev/null; then \
@@ -107,9 +109,11 @@ RUN mksdcard "${SDCARD_SIZE}M" /sdcard.img \
          echo "disk.dataPartition.size=${USERDATA_SIZE}M" >> "$conf"; \
        fi \
     && if [ -f "/root/.android/avd/${AVD_NAME}.avd/userdata.img" ]; then \
-         mv "/root/.android/avd/${AVD_NAME}.avd/userdata.img" \
-            "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img"; \
+         rm -f "/root/.android/avd/${AVD_NAME}.avd/userdata.img"; \
        fi \
+    && rm -f "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img" \
+    && qemu-img create -f qcow2 "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img" "${USERDATA_SIZE}M" \
+    && sed -i "s|^disk.dataPartition.path=.*|disk.dataPartition.path=/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img|" "$conf" \
     && sed -i -E \
          -e 's/^hw\.audioInput.*/hw.audioInput=no/' \
          -e 's/^hw\.audioOutput.*/hw.audioOutput=no/' \
@@ -139,10 +143,14 @@ ENTRYPOINT ["/entrypoint.sh"]
 # userdata on Linux+KVM; Docker commit is deliberately not part of the flow.
 FROM android-base AS prepared-runtime
 
-COPY prepared/android16.avd/ /root/.android/avd/android16.avd/
-COPY prepared/android16.ini /root/.android/avd/android16.ini
+ARG AVD_NAME=android16
+COPY prepared/ /tmp/prepared/
 COPY prepared/manifest.env /opt/qaguru/prepared-avd.env
 
-RUN test -s /root/.android/avd/android16.avd/userdata-qemu.img \
+RUN test -s "/tmp/prepared/${AVD_NAME}.avd/userdata-qemu.img" \
     && test -s /opt/qaguru/prepared-avd.env \
-    && rm -f /root/.android/avd/android16.avd/*.lock
+    && mkdir -p "/root/.android/avd/${AVD_NAME}.avd" \
+    && cp -a "/tmp/prepared/${AVD_NAME}.avd/." "/root/.android/avd/${AVD_NAME}.avd/" \
+    && cp "/tmp/prepared/${AVD_NAME}.ini" "/root/.android/avd/${AVD_NAME}.ini" \
+    && rm -f "/root/.android/avd/${AVD_NAME}.avd/"*.lock \
+    && rm -rf /tmp/prepared
