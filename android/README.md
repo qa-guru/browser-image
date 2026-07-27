@@ -170,7 +170,7 @@ Registry: `qaguru/android:16` опубликован в Docker Hub, digest
 
 ## WARM POOL — DEFERRED
 
-Это отдельная архитектурная фаза и **не часть текущей cold-container реализации**. `warm-pool-orchestrator/` здесь не меняется.
+Это отдельная архитектурная фаза и **не часть текущей cold-container реализации**. `selenoid-warm-pool/` здесь не меняется.
 
 Граница будущего плана:
 
