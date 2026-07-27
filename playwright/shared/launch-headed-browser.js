@@ -12,6 +12,11 @@ const channel = process.env.PW_BROWSER_CHANNEL;
 if (channel) {
   launchOptions.channel = channel;
 }
+// Hub → PW_PROXY (same as launchServer) so VNC manual sessions honor SOCKS/HTTP proxy.
+const proxyServer = process.env.PW_PROXY;
+if (proxyServer) {
+  launchOptions.proxy = { server: proxyServer };
+}
 
 (async () => {
   const browser = await browserType.launch(launchOptions);

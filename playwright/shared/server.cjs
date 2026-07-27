@@ -67,6 +67,12 @@ const launchOptions = {
   wsPath,
 };
 
+// Hub → capsFromQuery(socksProxy) → env PW_PROXY (socks5://host:port or full URL).
+const proxyServer = env("PW_PROXY");
+if (proxyServer) {
+  launchOptions.proxy = { server: proxyServer };
+}
+
 if (browserTypeName === "chromium") {
   launchOptions.args = ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"];
   const screenSize = parseScreenResolution("SCREEN_RESOLUTION");
