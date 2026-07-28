@@ -59,6 +59,24 @@ WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-mi
 
 Каждый образ — self-contained node: Xvfb, VNC, `launchServer` через `/opt/playwright/entrypoint.sh`. Hub передаёт env (`ENABLE_VNC`, `ENABLE_VIDEO`, `PW_HEADLESS`, …) и использует `ENTRYPOINT` образа.
 
+## DevTools / CDP на 7070 (chromium / chrome / msedge)
+
+Chromium-семейство поднимает статический CDP-прокси (`shared/devtools-proxy/`) на
+контейнерном порту `7070`. Playwright по умолчанию использует
+`--remote-debugging-pipe`; `server.cjs` дополнительно передаёт
+`--remote-debugging-port=0`, чтобы Chrome открыл **случайный** TCP CDP-порт и
+записал `DevToolsActivePort`. Прокси обнаруживает порт через `/proc` +
+`DevToolsActivePort` (как warm WebDriver) — **пиннить** debug-порт нельзя.
+
+Это включает hub-HAR (`?enableHAR=true`), `se:cdp` и `/devtools/<session-id>/`.
+Firefox, WebKit и `playwright-chromium:*-min` порт 7070 не поднимают.
+
+| Путь на :7070 | Назначение |
+|---------------|-----------|
+| `ws /page` | page-таргет — hub-HAR (`ws://<host:7070>/page`) |
+| `ws /` · `ws /browser` | browser-таргет — `se:cdp`, `/devtools/<id>/` |
+| `http /json*` | DevTools HTTP API (passthrough) |
+
 ---
 
 ## Сравнение с Selenium-образами (WebDriver)

@@ -8,6 +8,10 @@ const browserType = browserTypes[browserTypeName] || chromium;
 process.env.DISPLAY = process.env.DISPLAY || ":99";
 
 const launchOptions = { headless: false };
+if (browserTypeName === "chromium") {
+  // Same as server.cjs: expose a random TCP CDP port for the :7070 proxy.
+  launchOptions.args = ["--remote-debugging-port=0"];
+}
 const channel = process.env.PW_BROWSER_CHANNEL;
 if (channel) {
   launchOptions.channel = channel;
