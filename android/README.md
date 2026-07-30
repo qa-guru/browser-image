@@ -192,4 +192,4 @@ Warm pool не должен менять семантику `appium:app`, `noRes
 - budtmo / Pro
 - device farm
 - Chrome Mobile / chromedriver в этом образе
-- **Hub HAR (`enableHAR`)** — нет CDP `:7070`; phase 6 benchmark: **not claimed** (`selenoid-tests/docs/har-benchmark/7-android-blocker.json`)
+- **Hub HAR (`enableHAR`)** — not planned; hub HAR is browser CDP only (`selenoid-tests/docs/har-benchmark/7-android-blocker.json`, status **cancelled**)
