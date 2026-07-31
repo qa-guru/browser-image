@@ -1,0 +1,79 @@
+# SonarQube — qa-guru/browser-image
+# Canon: docs/sonar/GITHUB-ACTIONS.md (monorepo) · projectKey: selenoid-browser-image
+# Report-first: Quality Gate soft unless vars.SONAR_REQUIRED=true
+# Does not alter tag-only publish workflows.
+
+name: sonar
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GOTOOLCHAIN: auto
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Golang
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.5"
+          cache: false
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Offline prep (shell/JSON/optional Go)
+        id: prep
+        run: |
+          set -euo pipefail
+          bash scripts/ci-sonar-prep.sh
+          if [[ -f sonar-coverage.env ]]; then
+            echo "args=-D$(tr -d '\n' < sonar-coverage.env)" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
+        with:
+          projectBaseDir: .
+          args: ${{ steps.prep.outputs.args }}
+
+      - name: SonarQube Quality Gate
+        id: quality-gate
+        uses: SonarSource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
+        continue-on-error: ${{ vars.SONAR_REQUIRED != 'true' }}
+
+      - name: Fail job when gate required
+        if: vars.SONAR_REQUIRED == 'true' && steps.quality-gate.outcome == 'failure'
+        run: exit 1
+
+      - name: Job summary
+        if: always()
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
+        run: |
+          {
+            echo "## selenoid-browser-image sonar"
+            echo ""
+            echo "- projectKey: \`selenoid-browser-image\`"
+            echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=selenoid-browser-image"
+            echo "- commit: \`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
