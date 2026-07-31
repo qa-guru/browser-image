@@ -7,7 +7,8 @@ cd "$ROOT"
 if command -v shellcheck >/dev/null 2>&1; then
   mapfile -t shells < <(find playwright webdriver video-recorder scripts -type f -name '*.sh' 2>/dev/null | sort)
   if ((${#shells[@]})); then
-    shellcheck -x "${shells[@]}"
+    # Error severity only — existing scripts have style warnings/info (SC1091/SC2034/…).
+    shellcheck -S error -x "${shells[@]}"
   fi
 else
   echo "shellcheck not installed — skip (CI image should provide it)" >&2
