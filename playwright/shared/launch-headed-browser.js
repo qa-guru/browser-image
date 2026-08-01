@@ -8,9 +8,18 @@ const browserType = browserTypes[browserTypeName] || chromium;
 process.env.DISPLAY = process.env.DISPLAY || ":99";
 
 const launchOptions = { headless: false };
+if (browserTypeName === "chromium") {
+  // Same as server.cjs: expose a random TCP CDP port for the :7070 proxy.
+  launchOptions.args = ["--remote-debugging-port=0"];
+}
 const channel = process.env.PW_BROWSER_CHANNEL;
 if (channel) {
   launchOptions.channel = channel;
+}
+// Hub → PW_PROXY (same as launchServer) so VNC manual sessions honor SOCKS/HTTP proxy.
+const proxyServer = process.env.PW_PROXY;
+if (proxyServer) {
+  launchOptions.proxy = { server: proxyServer };
 }
 
 (async () => {

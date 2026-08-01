@@ -1,0 +1,6 @@
+# Phone Qt window only. Do NOT match bare title "Emulator" — that is an empty shell.
+# Size comes from emulator -fixed-scale (1:1 skin); no forced maximize (Qt ignores it).
+[app] (title=Android Emulator*)
+  [Deco]      {NONE}
+  [Layer]     {2}
+[end]

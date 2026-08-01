@@ -1,5 +1,10 @@
 # Playwright browser images
 
+<!-- stack-branches-note:start -->
+**Stack pin:** стабильные сборки всего стека — ветки [`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.45-engine26.1-go1.26-react16) (**v2.2.1**, API 1.45 / Engine 26.1.x / Go 1.26.5 / React 16) и [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.55-engine29.6-go1.26-react18) (**v2.3.0**, API 1.55 / Engine 29.6+ / Go 1.26.5 / React 18). Детали — [`STACK-PIN.md`](../STACK-PIN.md) · [корневой README](../README.md) · [monorepo SSOT](https://github.com/qa-guru/zero-design-system/blob/master/projects/selenoid-home/README.md).
+<!-- stack-branches-note:end -->
+
+
 Часть репозитория [`browser-image`](../README.md) (`playwright/`). WebDriver-образы — в [`webdriver/`](../webdriver/).
 
 Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/qa-guru/selenoid). Hub поднимает их по запросу и проксирует Playwright WebSocket на `/playwright/{browser}/{version}`.
@@ -51,7 +56,7 @@ Docker-образы browser nodes для [qa-guru/selenoid](https://github.com/q
 Это **не hub** — отдельные контейнеры с Playwright `launchServer`, VNC и Xvfb. Hub [qa-guru/selenoid](https://github.com/qa-guru/selenoid) читает `browsers.json`, стартует нужный образ и проксирует WebSocket клиента.
 
 ```
-Playwright test  ──►  selenoid hub  ──►  qaguru/playwright-chromium:1.60.0
+Playwright test  ──►  selenoid hub  ──►  qaguru/playwright-chromium:1.61.1
                                               (этот репозиторий)
 ```
 
@@ -82,6 +87,24 @@ WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-mi
 
 Каждый образ — self-contained node: Xvfb, VNC, `launchServer` через `/opt/playwright/entrypoint.sh`. Hub передаёт env (`ENABLE_VNC`, `ENABLE_VIDEO`, `PW_HEADLESS`, …) и использует `ENTRYPOINT` образа.
 
+## DevTools / CDP на 7070 (chromium / chrome / msedge)
+
+Chromium-семейство поднимает статический CDP-прокси (`shared/devtools-proxy/`) на
+контейнерном порту `7070`. Playwright по умолчанию использует
+`--remote-debugging-pipe`; `server.cjs` дополнительно передаёт
+`--remote-debugging-port=0`, чтобы Chrome открыл **случайный** TCP CDP-порт и
+записал `DevToolsActivePort`. Прокси обнаруживает порт через `/proc` +
+`DevToolsActivePort` (как warm WebDriver) — **пиннить** debug-порт нельзя.
+
+Это включает hub-HAR (`?enableHAR=true`), `se:cdp` и `/devtools/<session-id>/`.
+Firefox, WebKit и `playwright-chromium:*-min` порт 7070 не поднимают.
+
+| Путь на :7070 | Назначение |
+|---------------|-----------|
+| `ws /page` | page-таргет — hub-HAR (`ws://<host:7070>/page`) |
+| `ws /` · `ws /browser` | browser-таргет — `se:cdp`, `/devtools/<id>/` |
+| `http /json*` | DevTools HTTP API (passthrough) |
+
 ---
 
 ## Сравнение с Selenium-образами (WebDriver)
@@ -91,7 +114,7 @@ WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-mi
 | | Playwright (`qaguru/playwright-*`) | WebDriver (`qaguru/webdriver-chrome`) |
 |---|---|---|
 | **Протокол** | WebSocket `/playwright/...` | HTTP `POST /wd/hub/session` |
-| **Что означает версия** | npm `@playwright/test` (`1.60.0`) | мажор браузера (`148.0` → Chrome 148.x) |
+| **Что означает версия** | npm `@playwright/test` (`1.61.1`) | мажор браузера (`149.0` → Chrome 149.x) |
 | **Клиент** | Playwright / `@playwright/test` | Selenium WebDriver |
 | **Образы** | `playwright/` в этом репозитории | `webdriver/` в этом репозитории |
 
@@ -101,24 +124,24 @@ WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-mi
 
 | Браузер | Playwright в hub | Движок в контейнере | WebDriver в hub | Docker-тег qaguru |
 |---|---|---|---|---|
-| Chromium | `playwright-chromium` **1.60.0** | Chromium **148** | `chrome` **148.0** | `qaguru/webdriver-chrome:148` |
-| Google Chrome | `playwright-chrome` **1.60.0** | stable channel | — | — |
-| Firefox | `playwright-firefox` **1.60.0** | Firefox **150** | — | — |
-| Microsoft Edge | `playwright-msedge` **1.60.0** | stable channel | — | — |
-| WebKit | `playwright-webkit` **1.60.0** | WebKit **26.4** | — | — |
+| Chromium | `playwright-chromium` **1.61.1** | Chromium **149** | `chrome` **149.0** | `qaguru/webdriver-chrome:149` |
+| Google Chrome | `playwright-chrome` **1.61.1** | stable channel | — | — |
+| Firefox | `playwright-firefox` **1.61.1** | Firefox **151** | — | — |
+| Microsoft Edge | `playwright-msedge` **1.61.1** | stable channel | — | — |
+| WebKit | `playwright-webkit` **1.61.1** | WebKit **26.5** | — | — |
 
-> Стеки **нельзя** подменять: `chrome:148.0` ≠ `playwright-chromium:1.60.0`.
+Стеки **нельзя** подменять: `chrome:149.0` ≠ `playwright-chromium:1.61.1`.
 
 ### Матрица версий в `browsers.json`
 
 | Имя в hub | Default | Версии в конфиге | Docker-образ |
 |---|---|---|---|
-| `playwright-chromium` | `1.60.0` | 1.60.0, 1.60.0-min | `qaguru/playwright-chromium:<версия>` |
-| `playwright-firefox` | `1.60.0` | 1.60.0 | `qaguru/playwright-firefox:<версия>` |
-| `playwright-webkit` | `1.60.0` | 1.60.0 | `qaguru/playwright-webkit:<версия>` |
-| `playwright-chrome` | `1.60.0` | 1.60.0 | `qaguru/playwright-chrome:<версия>` |
-| `playwright-msedge` | `1.60.0` | 1.60.0 | `qaguru/playwright-msedge:<версия>` |
-| `chrome` | `148.0` | 148.0, 148.0-min | `qaguru/webdriver-chrome:148`, `qaguru/webdriver-chrome:148-min` |
+| `playwright-chromium` | `1.61.1` | 1.61.1, 1.61.1-min | `qaguru/playwright-chromium:<версия>` |
+| `playwright-firefox` | `1.61.1` | 1.61.1 | `qaguru/playwright-firefox:<версия>` |
+| `playwright-webkit` | `1.61.1` | 1.61.1 | `qaguru/playwright-webkit:<версия>` |
+| `playwright-chrome` | `1.61.1` | 1.61.1 | `qaguru/playwright-chrome:<версия>` |
+| `playwright-msedge` | `1.61.1` | 1.61.1 | `qaguru/playwright-msedge:<версия>` |
+| `chrome` | `149.0` | 149.0, 149.0-min, 148.0, 148.0-min | `qaguru/webdriver-chrome:149`, `qaguru/webdriver-chrome:149-min` |
 
 ### Движки внутри Playwright-образов
 
@@ -179,7 +202,7 @@ WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-mi
 | Firefox | 151.0 | 151.0 (в `playwright-firefox`) |
 | WebKit | 26.5 | 26.5 (в `playwright-webkit`) |
 
-> Официальный образ Microsoft предназначен для **тестов и разработки** ([документация](https://playwright.dev/docs/docker)); для untrusted-сайтов рекомендуют отдельного пользователя и seccomp. Образы `qaguru/playwright-*` рассчитаны на **доверенные e2e-тесты** в инфраструктуре Selenoid.
+Официальный образ Microsoft предназначен для **тестов и разработки** ([документация](https://playwright.dev/docs/docker)); для untrusted-сайтов рекомендуют отдельного пользователя и seccomp. Образы `qaguru/playwright-*` рассчитаны на **доверенные e2e-тесты** в инфраструктуре Selenoid.
 
 ### Эквивалент `run-server` вручную
 

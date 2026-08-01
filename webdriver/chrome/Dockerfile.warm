@@ -2,6 +2,15 @@ ARG CHROME_CFT_VERSION=149.0.7827.55
 FROM alpine:3.21 AS init
 RUN apk add --no-cache dumb-init
 
+# Static CDP proxy for container port 7070 (hub-HAR / se:cdp / /devtools/<id>/).
+# Cross-compiled on the build host for the target arch (amd64 + arm64), no CGO.
+FROM --platform=$BUILDPLATFORM golang:1.26.5-bookworm AS devtools-proxy
+ARG TARGETARCH
+WORKDIR /src
+COPY shared/devtools-proxy/ ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags='-s -w' -o /devtools-proxy .
+
 FROM debian:bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -78,6 +87,7 @@ RUN set -eux \
        esac
 
 COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
+COPY --from=devtools-proxy /devtools-proxy /usr/local/bin/devtools-proxy
 COPY shared/chrome-wrapper.sh /usr/local/bin/google-chrome
 RUN chmod +x /usr/local/bin/google-chrome \
     && case "${TARGETARCH}" in \
@@ -87,7 +97,7 @@ RUN chmod +x /usr/local/bin/google-chrome \
 COPY shared/common.sh shared/entrypoint-warm.sh /opt/webdriver/
 RUN chmod +x /opt/webdriver/common.sh /opt/webdriver/entrypoint-warm.sh
 
-EXPOSE 4444 5900
+EXPOSE 4444 5900 7070
 
 HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=6 \
     CMD curl -sf "http://127.0.0.1:${CHROMEDRIVER_PORT}/status" >/dev/null || exit 1
@@ -97,6 +107,7 @@ LABEL org.opencontainers.image.title="qaguru/webdriver-chrome" \
       io.qaguru.browser="chrome" \
       io.qaguru.protocol="webdriver" \
       io.qaguru.port="4444" \
+      io.qaguru.devtools.port="7070" \
       io.qaguru.variant="warm" \
       io.qaguru.chrome.cft="${CHROME_CFT_VERSION}" \
       io.qaguru.chrome.major="${CHROME_MAJOR}"

@@ -1,5 +1,10 @@
 # WebDriver browser images
 
+<!-- stack-branches-note:start -->
+**Stack pin:** стабильные сборки всего стека — ветки [`selenoid2-1.45-engine26.1-go1.26-react16`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.45-engine26.1-go1.26-react16) (**v2.2.1**, API 1.45 / Engine 26.1.x / Go 1.26.5 / React 16) и [`selenoid2-1.55-engine29.6-go1.26-react18`](https://github.com/qa-guru/browser-image/tree/selenoid2-1.55-engine29.6-go1.26-react18) (**v2.3.0**, API 1.55 / Engine 29.6+ / Go 1.26.5 / React 18). Детали — [`STACK-PIN.md`](../STACK-PIN.md) · [корневой README](../README.md) · [monorepo SSOT](https://github.com/qa-guru/zero-design-system/blob/master/projects/selenoid-home/README.md).
+<!-- stack-branches-note:end -->
+
+
 Часть репозитория [`browser-image`](../README.md) (`webdriver/`). Playwright-образы — в [`playwright/`](../playwright/).
 
 Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Selenium server).
@@ -44,8 +49,32 @@ Selenium WebDriver nodes для Selenoid `/wd/hub` (driver на `/`, не Seleni
 
 | Variant | Назначение |
 |---------|------------|
-| **warm** | prod, UI, VNC (`ENABLE_VNC=true`, порт 5900, пароль `selenoid`) |
-| **min** | headless CI |
+| **warm** | prod, UI, VNC (`ENABLE_VNC=true`, порт 5900, пароль `selenoid`); DevTools-прокси на 7070 |
+| **min** | headless CI (без 7070 — by design) |
+
+## DevTools / CDP на 7070 (warm chrome + msedge)
+
+Warm-образы Chrome и Edge поднимают статический CDP-прокси
+(`shared/devtools-proxy/`, собирается в `Dockerfile.warm` под обе арки) на
+контейнерном порту `7070`. chromedriver/msedgedriver запускает браузер с
+`--remote-debugging-port=0`, поэтому браузер сам выбирает **случайный**
+эфемерный порт и пишет его в `<user-data-dir>/DevToolsActivePort`. Прокси
+self-sufficient — не зависит от wrapper'а:
+
+- **порт** — обнаруживает через `/proc` (по `--user-data-dir` живого процесса
+  браузера) + чтение `DevToolsActivePort`, с fallback-глобом по `/tmp`;
+- **Origin** — снимает заголовок `Origin` при форварде, поэтому Chrome 111+
+  принимает CDP-handshake без `--remote-allow-origins`;
+- **Host** — переписывает на loopback (DNS-rebinding guard Chrome).
+
+Это включает hub-HAR (`enableHAR=true`), `se:cdp` и `/devtools/<session-id>/`.
+Firefox и `-min` порт 7070 не поднимают.
+
+| Путь на :7070 | Назначение |
+|---------------|-----------|
+| `ws /page` | page-таргет — hub-HAR (`ws://<host:7070>/page`) |
+| `ws /` · `ws /browser` | browser-таргет — `se:cdp`, `/devtools/<id>/` |
+| `http /json*` | DevTools HTTP API (passthrough) |
 
 ## Build
 

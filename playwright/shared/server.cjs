@@ -67,8 +67,23 @@ const launchOptions = {
   wsPath,
 };
 
+// Hub → capsFromQuery(socksProxy) → env PW_PROXY (socks5://host:port or full URL).
+const proxyServer = env("PW_PROXY");
+if (proxyServer) {
+  launchOptions.proxy = { server: proxyServer };
+}
+
 if (browserTypeName === "chromium") {
-  launchOptions.args = ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"];
+  // --remote-debugging-port=0: Chrome picks a random TCP CDP port and writes
+  // DevToolsActivePort. Playwright still uses --remote-debugging-pipe for its
+  // own transport; the hub reaches CDP via the static proxy on container :7070.
+  // Do not pin a concrete debug port — that breaks Playwright's launch.
+  launchOptions.args = [
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--remote-debugging-port=0",
+  ];
   const screenSize = parseScreenResolution("SCREEN_RESOLUTION");
   if (screenSize) {
     launchOptions.args.push(`--window-size=${screenSize.width},${screenSize.height}`);
