@@ -19,6 +19,10 @@ on:
           - min
         default: full
 
+concurrency:
+  group: browser-image-publish
+  cancel-in-progress: false
+
 jobs:
   docker:
     runs-on: ubuntu-latest
