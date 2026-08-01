@@ -11,6 +11,10 @@ on:
       - "webdriver/msedge-[0-9]+"
   workflow_dispatch:
 
+concurrency:
+  group: browser-image-publish
+  cancel-in-progress: false
+
 jobs:
   docker:
     runs-on: ubuntu-latest
