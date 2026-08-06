@@ -12,12 +12,11 @@
 
 | Docker | Назначение |
 |--------|------------|
-| `selenoid/android:5.1` | **Catalog floor** (aerokube legacy) — в `browsers.json` |
-| `qaguru/android:8` | WIP build (API 26) — **ещё не** в каталоге; `./scripts/build.sh 8` |
+| `qaguru/android:8` | **Floor** Android 8.0 / API 26 · Linux+KVM (UiAutomator2 8.1 min) |
 | `qaguru/android:10` … `:15` | Android 10–15 / API 29–35 · Linux+KVM |
-| `qaguru/android:16` | Android 16 / API 36 · prepared-runtime · Linux+KVM |
+| `qaguru/android:16` | Android 16 / API 36 · Linux+KVM |
 
-Тег образа = major (`11.0` → `:11`). Каталог сейчас: **5.1 + 10–16** (default **16.0**). `:8` попадёт в browsers после prepare+promote.
+Тег образа = major (`8.0` → `:8`, `11.0` → `:11`). Сборка: `./scripts/build.sh 8` (Linux+KVM). Ниже API 26 текущий Appium/UiAutomator2 **не** поднимает.
 
 Основа паттерна — [aerokube/images selenium/android](https://github.com/aerokube/images/tree/master/selenium/android) (Apache 2.0). **Без** budtmo / sponsor Pro blobs.
 
