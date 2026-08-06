@@ -12,10 +12,11 @@
 
 | Docker | Назначение |
 |--------|------------|
-| `qaguru/android:11` … `:15` | Android 11–15 / API 30–35 · Linux+KVM |
+| `qaguru/android:8` | **Floor** Android 8.0 / API 26 · Linux+KVM (UiAutomator2 8.1 min) |
+| `qaguru/android:10` … `:15` | Android 10–15 / API 29–35 · Linux+KVM |
 | `qaguru/android:16` | Android 16 / API 36 · Linux+KVM |
 
-Тег образа = major (`11.0` в browsers.json → `:11`). Сборка всех 11–15: `./scripts/build-all.sh` (Linux+KVM).
+Тег образа = major (`8.0` → `:8`, `11.0` → `:11`). Сборка: `./scripts/build.sh 8` (Linux+KVM). Ниже API 26 текущий Appium/UiAutomator2 **не** поднимает.
 
 Основа паттерна — [aerokube/images selenium/android](https://github.com/aerokube/images/tree/master/selenium/android) (Apache 2.0). **Без** budtmo / sponsor Pro blobs.
 
@@ -165,8 +166,13 @@ POST → sessionId samples: **69.67, 66.22, 78.91, 75.22, 75.92 s**. Median **75
 
 Дополнительный prod smoke с `appium:app` URL и `appium:noReset=false`: sessionId **86.10 s**, touch **HTTP 200**, screenshot **HTTP 200**, VNC WebSocket **HTTP 101**. Отдельный `enableVideo=true` smoke создал валидный MP4 (**305,565 bytes**). После всех smoke: hub `used=0`, Android containers `0`.
 
-Registry: `qaguru/android:16` опубликован в Docker Hub, digest
-`sha256:566edca29639de108c601b02dbb07495f34e14b5c31c034cab1e8c42aa6a418a`.
+Registry: `qaguru/android:16` = prepared-runtime (userdata + helper APK + `/opt/qaguru/prepared-avd.env`).
+Docker Hub digest `sha256:1e42dd7a643b44e6739f272885b2dcadffd0715d15b34959be14d85e9cb89cef`
+(promoted from local `16-preprod` on 2026-08-06). Old unprepared base
+`sha256:566edca29639…` must not be retagged as `:16`.
+
+Re-smoke after promote (prod, 6g/4cpu, COUNT=3): sessionId **66.7 / 75.6 / 90.2 s**,
+median **75.6 s**; touch/screenshot/VNC OK.
 
 ## WARM POOL — DEFERRED
 
