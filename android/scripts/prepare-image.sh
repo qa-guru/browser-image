@@ -24,7 +24,8 @@ read -r AVD_NAME PLATFORM_ARG BUILD_TOOLS DEVICE EMULATOR_IMAGE_TYPE <<<"$(resol
 rm -rf "${OUTPUT}"
 mkdir -p "${OUTPUT}"
 
-docker build \
+# --network=host: apt/sdkmanager flaky under buildkit default net on some hosts
+docker build --network=host \
   --platform "${DOCKER_PLATFORM}" \
   --target android-base \
   --build-arg "AVD_NAME=${AVD_NAME}" \
@@ -51,7 +52,7 @@ docker run --rm \
   --entrypoint /prepare-avd.sh \
   "${BASE_TAG}"
 
-docker build \
+docker build --network=host \
   --platform "${DOCKER_PLATFORM}" \
   --target prepared-runtime \
   --build-arg "AVD_NAME=${AVD_NAME}" \

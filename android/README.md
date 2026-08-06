@@ -12,11 +12,12 @@
 
 | Docker | Назначение |
 |--------|------------|
-| `qaguru/android:8` | **Floor** Android 8.0 / API 26 · Linux+KVM (UiAutomator2 8.1 min) |
+| `selenoid/android:5.1` | **Catalog floor** (aerokube legacy) — в `browsers.json` |
+| `qaguru/android:8` | WIP build (API 26) — **ещё не** в каталоге; `./scripts/build.sh 8` |
 | `qaguru/android:10` … `:15` | Android 10–15 / API 29–35 · Linux+KVM |
-| `qaguru/android:16` | Android 16 / API 36 · Linux+KVM |
+| `qaguru/android:16` | Android 16 / API 36 · prepared-runtime · Linux+KVM |
 
-Тег образа = major (`8.0` → `:8`, `11.0` → `:11`). Сборка: `./scripts/build.sh 8` (Linux+KVM). Ниже API 26 текущий Appium/UiAutomator2 **не** поднимает.
+Тег образа = major (`11.0` → `:11`). Каталог сейчас: **5.1 + 10–16** (default **16.0**). `:8` попадёт в browsers после prepare+promote.
 
 Основа паттерна — [aerokube/images selenium/android](https://github.com/aerokube/images/tree/master/selenium/android) (Apache 2.0). **Без** budtmo / sponsor Pro blobs.
 
@@ -58,7 +59,7 @@ Snapshot policy — явный `-no-snapshot`: userdata подготовлен, 
 
 ## browsers.json (SSOT)
 
-`dev/browsers.json` → `android` **4.4 + 10.0–16.0** (8 версий), default **10.0** (`selenoid/android:10.0`); **11.0–16.0** → `qaguru/android:11`…`:16`. Legacy aerokube: только **`4.4`**. Prod: `dev/browsers-production.json`. После правок: `dev/scripts/sync-cm-browsers.sh`.
+`dev/browsers.json` → `android` **5.1 + 10.0–16.0** (8 версий), default **16.0** (`qaguru/android:16` prepared); **10.0–16.0** → `qaguru/android:10`…`:16` (6g/4cpu). Legacy floor: **`selenoid/android:5.1`**. Без **4.4**. Prod: `dev/browsers-production.json`. После правок: `dev/scripts/sync-cm-browsers.sh`.
 
 Env по умолчанию: `SCREEN_RESOLUTION=2100x2100x24` (квадратный VNC-canvas с запасом под Qt chrome). Skin эмулятора остаётся `1080x1920`.
 
