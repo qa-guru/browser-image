@@ -7,7 +7,7 @@
 | Node | **24** (канон стека) |
 | Appium | **3.5.2** |
 | UiAutomator2 | **8.1.0** |
-| AVD | API 36 · `google_apis` · **x86_64** · skin `1080x1920` |
+| AVD | API 36 · `google_apis` · **x86_64** · device **`pixel`** · skin `1080x1920` |
 | Xvfb / VNC canvas | **`2100x2100x24`** (square: skin + Qt title/toolbar margin; portrait + landscape) |
 
 | Docker | Назначение |
@@ -68,7 +68,7 @@ Env по умолчанию: `SCREEN_RESOLUTION=2100x2100x24` (квадратн�
 |---|---|
 | Лого растянуто | Wallpaper `aerokube.png` **2100×2100**, Fluxbox `background: aspect` + `feh --bg-center` |
 | Маленький phone + пустой desktop | Эмулятор `-fixed-scale` (окно 1:1 к skin `1080x1920`); deco off; raise loop |
-| Крошечное окно `320×240` при госте `1080×2400` | Pixel-skin нет в cmdline `emulator`; API 35+ игнорирует CLI `-skin`. Pin `skin.name`/`hw.lcd.*` = `1080x1920` (`scripts/pin-avd-display.sh`) |
+| Крошечное окно `320×240` | Все теги — `--device pixel` (lcd 1080×1920). Pin только frameless `skin.name`/`skin.path` = `1080x1920` (cmdline `emulator` без Pixel-frames) |
 | Низ телефона обрезан | Canvas `2100²` = skin + title/toolbar margin (не skin alone `1920²`) |
 | Landscape во время сессии | Тот же квадрат вмещает portrait (`~1150×1970`) и landscape (`~1990×1130`); окно pinned **слева снизу** (не прыгает в top-left) |
 | Образ в VNC «едет» вверх рывками | `wmctrl -e …,-1,-1` раздувает Qt-окно (~+25px/тик). Pin с **явным** `w,h`, только при смене размера (rotate) |

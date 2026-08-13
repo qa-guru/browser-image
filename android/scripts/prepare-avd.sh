@@ -28,7 +28,7 @@ trap clean EXIT
 
 avd_dir="/root/.android/avd/${AVD_NAME}.avd"
 conf="${avd_dir}/config.ini"
-# Pin before first boot so SystemUI bakes at the VNC skin, not Pixel 6 1080x2400.
+# Rectangular skin before first boot (cmdline emulator has no Pixel frames).
 /opt/qaguru/pin-avd-display.sh "${conf}" 1080x1920
 userdata="${avd_dir}/userdata-qemu.img"
 rm -f "${userdata}.qcow2"
