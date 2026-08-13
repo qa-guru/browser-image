@@ -232,6 +232,9 @@ if [[ "${ENABLE_VNC}" != "true" && "${ENABLE_VIDEO}" != "true" ]]; then
   EMULATOR_ARGS="${EMULATOR_ARGS} -no-window"
 fi
 
+# CLI -skin is not enough on API 35+: missing Pixel frames → 320x240 Qt window.
+/opt/qaguru/pin-avd-display.sh "/root/.android/avd/${AVD_NAME}.avd/config.ini" "${SKIN}"
+
 # shellcheck disable=SC2086
 # Force guest RAM explicitly: emulator otherwise clamps hw.ramSize using host
 # /proc/meminfo heuristics (cgroup limits are invisible → ~2560M).

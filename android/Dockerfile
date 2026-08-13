@@ -131,9 +131,11 @@ RUN mksdcard "${SDCARD_SIZE}M" /sdcard.img \
 COPY Emulator.conf /tmp/Emulator.conf
 COPY entrypoint.sh /entrypoint.sh
 COPY scripts/prepare-avd.sh /prepare-avd.sh
+COPY scripts/pin-avd-display.sh /opt/qaguru/pin-avd-display.sh
 RUN mkdir -p "/root/.config/Android Open Source Project" \
     && mv /tmp/Emulator.conf "/root/.config/Android Open Source Project/Emulator.conf" \
-    && chmod +x /entrypoint.sh /prepare-avd.sh
+    && chmod +x /entrypoint.sh /prepare-avd.sh /opt/qaguru/pin-avd-display.sh \
+    && /opt/qaguru/pin-avd-display.sh "/root/.android/avd/${AVD_NAME}.avd/config.ini" 1080x1920
 
 EXPOSE 4444 5900
 

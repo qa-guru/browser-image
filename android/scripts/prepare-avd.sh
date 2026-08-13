@@ -28,6 +28,8 @@ trap clean EXIT
 
 avd_dir="/root/.android/avd/${AVD_NAME}.avd"
 conf="${avd_dir}/config.ini"
+# Pin before first boot so SystemUI bakes at the VNC skin, not Pixel 6 1080x2400.
+/opt/qaguru/pin-avd-display.sh "${conf}" 1080x1920
 userdata="${avd_dir}/userdata-qemu.img"
 rm -f "${userdata}.qcow2"
 if [[ ! -s "${userdata}" ]] || [[ "$(stat -c%s "${userdata}" 2>/dev/null || echo 0)" -lt 10485760 ]]; then
@@ -136,6 +138,7 @@ conf="${avd_dir}/config.ini"
 if grep -qE '^hw\.ramSize' "${conf}"; then sed -i -E 's/^hw\.ramSize.*/hw.ramSize=6144M/' "${conf}"; else echo 'hw.ramSize=6144M' >> "${conf}"; fi
 if grep -qE '^vm\.heapSize' "${conf}"; then sed -i -E 's/^vm\.heapSize.*/vm.heapSize=512M/' "${conf}"; else echo 'vm.heapSize=512M' >> "${conf}"; fi
 if grep -qE '^hw\.cpu\.ncore' "${conf}"; then sed -i -E 's/^hw\.cpu\.ncore.*/hw.cpu.ncore=4/' "${conf}"; else echo 'hw.cpu.ncore=4' >> "${conf}"; fi
+/opt/qaguru/pin-avd-display.sh "${conf}" 1080x1920
 
 rm -rf "${OUTPUT_DIR:?}/${AVD_NAME}.avd"
 mkdir -p "${OUTPUT_DIR}/${AVD_NAME}.avd"

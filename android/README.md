@@ -68,6 +68,7 @@ Env по умолчанию: `SCREEN_RESOLUTION=2100x2100x24` (квадратн�
 |---|---|
 | Лого растянуто | Wallpaper `aerokube.png` **2100×2100**, Fluxbox `background: aspect` + `feh --bg-center` |
 | Маленький phone + пустой desktop | Эмулятор `-fixed-scale` (окно 1:1 к skin `1080x1920`); deco off; raise loop |
+| Крошечное окно `320×240` при госте `1080×2400` | Pixel-skin нет в cmdline `emulator`; API 35+ игнорирует CLI `-skin`. Pin `skin.name`/`hw.lcd.*` = `1080x1920` (`scripts/pin-avd-display.sh`) |
 | Низ телефона обрезан | Canvas `2100²` = skin + title/toolbar margin (не skin alone `1920²`) |
 | Landscape во время сессии | Тот же квадрат вмещает portrait (`~1150×1970`) и landscape (`~1990×1130`); окно pinned **слева снизу** (не прыгает в top-left) |
 | Образ в VNC «едет» вверх рывками | `wmctrl -e …,-1,-1` раздувает Qt-окно (~+25px/тик). Pin с **явным** `w,h`, только при смене размера (rotate) |
