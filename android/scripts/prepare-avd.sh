@@ -30,15 +30,19 @@ avd_dir="/root/.android/avd/${AVD_NAME}.avd"
 conf="${avd_dir}/config.ini"
 # Rectangular skin before first boot (cmdline emulator has no Pixel frames).
 /opt/qaguru/pin-avd-display.sh "${conf}" 1080x1920
-userdata="${avd_dir}/userdata-qemu.img"
-rm -f "${userdata}.qcow2"
-if [[ ! -s "${userdata}" ]] || [[ "$(stat -c%s "${userdata}" 2>/dev/null || echo 0)" -lt 10485760 ]]; then
-  rm -f "${userdata}"
-  qemu-img create -f qcow2 "${userdata}" 1536M
+# Empty 1.5G userdata qcow2 keeps API 35 adb offline through first boot.
+# Working Hub images use emulator-managed <temp> at 6GiB (6144M).
+if grep -qE '^disk.dataPartition.path=' "${conf}"; then
+  sed -i -E 's|^disk.dataPartition.path=.*|disk.dataPartition.path=<temp>|' "${conf}"
+else
+  echo 'disk.dataPartition.path=<temp>' >> "${conf}"
 fi
-if grep -q 'disk.dataPartition.path=<temp>' "${conf}" 2>/dev/null; then
-  sed -i "s|^disk.dataPartition.path=<temp>|disk.dataPartition.path=${userdata}|" "${conf}"
+if grep -qE '^disk.dataPartition.size=' "${conf}"; then
+  sed -i -E 's|^disk.dataPartition.size=.*|disk.dataPartition.size=6144M|' "${conf}"
+else
+  echo 'disk.dataPartition.size=6144M' >> "${conf}"
 fi
+rm -f "${avd_dir}/userdata-qemu.img" "${avd_dir}/userdata-qemu.img.qcow2"
 
 ANDROID_AVD_HOME=/root/.android/avd \
   "${ANDROID_HOME}/emulator/emulator" \
@@ -135,6 +139,11 @@ userdata="${avd_dir}/userdata-qemu.img"
 
 # Guest RAM/CPU for System UI headroom (matches browsers.json mem/cpu).
 conf="${avd_dir}/config.ini"
+if grep -qE '^disk.dataPartition.path=' "${conf}"; then
+  sed -i -E "s|^disk.dataPartition.path=.*|disk.dataPartition.path=${userdata}|" "${conf}"
+else
+  echo "disk.dataPartition.path=${userdata}" >> "${conf}"
+fi
 if grep -qE '^hw\.ramSize' "${conf}"; then sed -i -E 's/^hw\.ramSize.*/hw.ramSize=6144M/' "${conf}"; else echo 'hw.ramSize=6144M' >> "${conf}"; fi
 if grep -qE '^vm\.heapSize' "${conf}"; then sed -i -E 's/^vm\.heapSize.*/vm.heapSize=512M/' "${conf}"; else echo 'vm.heapSize=512M' >> "${conf}"; fi
 if grep -qE '^hw\.cpu\.ncore' "${conf}"; then sed -i -E 's/^hw\.cpu\.ncore.*/hw.cpu.ncore=4/' "${conf}"; else echo 'hw.cpu.ncore=4' >> "${conf}"; fi

@@ -17,7 +17,7 @@ ARG ANDROID_ABI=x86_64
 ARG BUILD_TOOLS=build-tools;35.0.0
 # browsers.json browserVersion → image tag: 11.0→11 … 16.0→16 (see scripts/version-map.sh)
 ARG SDCARD_SIZE=512
-ARG USERDATA_SIZE=1536
+ARG USERDATA_SIZE=6144
 
 ENV ANDROID_HOME=/opt/android-sdk-linux \
     ANDROID_SDK_ROOT=/opt/android-sdk-linux \
@@ -112,8 +112,11 @@ RUN mksdcard "${SDCARD_SIZE}M" /sdcard.img \
          rm -f "/root/.android/avd/${AVD_NAME}.avd/userdata.img"; \
        fi \
     && rm -f "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img" \
-    && qemu-img create -f qcow2 "/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img" "${USERDATA_SIZE}M" \
-    && sed -i "s|^disk.dataPartition.path=.*|disk.dataPartition.path=/root/.android/avd/${AVD_NAME}.avd/userdata-qemu.img|" "$conf" \
+    && if grep -q '^disk.dataPartition.path=' "$conf" 2>/dev/null; then \
+         sed -i 's|^disk.dataPartition.path=.*|disk.dataPartition.path=<temp>|' "$conf"; \
+       else \
+         echo 'disk.dataPartition.path=<temp>' >> "$conf"; \
+       fi \
     && sed -i -E \
          -e 's/^hw\.audioInput.*/hw.audioInput=no/' \
          -e 's/^hw\.audioOutput.*/hw.audioOutput=no/' \
