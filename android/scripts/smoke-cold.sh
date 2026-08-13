@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 # Run on the Linux Selenoid host. Measures disposable POST->sessionId sessions,
 # verifies touch/screenshot/VNC, and always deletes the session.
+#
+# TAG=15 COUNT=1 ./scripts/smoke-cold.sh http://127.0.0.1:4444/wd/hub
+# Preprod: TAG=15-preprod VERSION=15.0 COUNT=1 ./scripts/smoke-cold.sh ...
 set -euo pipefail
 
 WEBDRIVER_URL="${1:-http://127.0.0.1:4444/wd/hub}"
 COUNT="${COUNT:-5}"
+TAG="${TAG:-16}"
+# 15-preprod → 15.0 unless VERSION is set explicitly
+VERSION="${VERSION:-${TAG%%-*}.0}"
+IMAGE="${IMAGE:-qaguru/android:${TAG}}"
 APP_URL="${APP_URL:-}"
 AUTH_ARGS=()
 [[ -n "${SELENOID_USER:-}" ]] && AUTH_ARGS=(-u "${SELENOID_USER}:${SELENOID_PASSWORD:?}")
@@ -12,12 +19,13 @@ HUB_ROOT="${WEBDRIVER_URL%/wd/hub}"
 tmp="$(mktemp -d)"
 sid=""
 cid=""
+echo "smoke.image=${IMAGE} browserVersion=${VERSION} count=${COUNT}"
 
 cleanup() {
   if [[ -z "${sid}" && -n "${cid}" ]]; then
     sid="$(curl -sf "${AUTH_ARGS[@]}" "${HUB_ROOT}/status" |
-      jq -r --arg cid "${cid}" '
-        .browsers.android["16.0"] | to_entries[]?.value.sessions[]?
+      jq -r --arg cid "${cid}" --arg ver "${VERSION}" '
+        .browsers.android[$ver] | to_entries[]?.value.sessions[]?
         | select(.container | startswith($cid)) | .id' |
       awk 'NR==1 {print; exit}')"
   fi
@@ -42,7 +50,7 @@ run_session() {
   local name="$1" payload="$2" started response_ms action_code screenshot_code vnc_code
   sid=""
   cid=""
-  if [[ "$(docker ps -q --filter ancestor=qaguru/android:16 | wc -l | tr -d ' ')" != "0" ]]; then
+  if [[ "$(docker ps -q --filter ancestor="${IMAGE}" | wc -l | tr -d ' ')" != "0" ]]; then
     echo "ERROR: Android container exists before ${name}" >&2
     return 1
   fi
@@ -57,7 +65,7 @@ run_session() {
   local curl_pid=$!
 
   for _ in $(seq 1 1200); do
-    cid="$(docker ps --filter ancestor=qaguru/android:16 --format '{{.ID}}' |
+    cid="$(docker ps --filter ancestor="${IMAGE}" --format '{{.ID}}' |
       awk 'NR==1 {print; exit}')"
     [[ -n "${cid}" ]] && break
     kill -0 "${curl_pid}" 2>/dev/null || break
@@ -102,7 +110,13 @@ run_session() {
   durations+=("${response_ms}")
 }
 
-base_payload='{"capabilities":{"alwaysMatch":{"browserName":"android","browserVersion":"16.0","selenoid:options":{"enableVNC":true,"screenResolution":"2100x2100x24"}}}}'
+base_payload="$(jq -cn --arg ver "${VERSION}" '{
+  capabilities:{alwaysMatch:{
+    browserName:"android",
+    browserVersion:$ver,
+    "selenoid:options":{enableVNC:true,screenResolution:"2100x2100x24"}
+  }}
+}')"
 durations=()
 for i in $(seq 1 "${COUNT}"); do
   run_session "cold-${i}" "${base_payload}"
@@ -116,10 +130,10 @@ p95="$(awk -v n="${p95_index}" 'NR==n {print; exit}' <<<"${sorted}")"
 echo "summary.count=${COUNT} median_ms=${median} p95_ms=${p95} samples_ms=$(printf '%s,' "${durations[@]}" | sed 's/,$//')"
 
 if [[ -n "${APP_URL}" ]]; then
-  app_payload="$(jq -cn --arg app "${APP_URL}" '{
+  app_payload="$(jq -cn --arg app "${APP_URL}" --arg ver "${VERSION}" '{
     capabilities:{alwaysMatch:{
       browserName:"android",
-      browserVersion:"16.0",
+      browserVersion:$ver,
       "appium:app":$app,
       "appium:noReset":false,
       "selenoid:options":{enableVNC:true,screenResolution:"2100x2100x24"}
@@ -128,7 +142,7 @@ if [[ -n "${APP_URL}" ]]; then
   run_session "app-url-no-reset-false" "${app_payload}"
 fi
 
-remaining="$(docker ps -q --filter ancestor=qaguru/android:16 | wc -l | tr -d ' ')"
+remaining="$(docker ps -q --filter ancestor="${IMAGE}" | wc -l | tr -d ' ')"
 used="$(curl -sf "${AUTH_ARGS[@]}" "${HUB_ROOT}/status" | jq -r '.used')"
 echo "cleanup.remaining_android_containers=${remaining} hub_used=${used}"
 [[ "${remaining}" == "0" ]]

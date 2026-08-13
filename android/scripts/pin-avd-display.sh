@@ -35,7 +35,9 @@ fi
 upsert() {
   local key="$1" val="$2"
   if grep -qE "^${key}=" "${conf}"; then
-    sed -i -E "s|^${key}=.*|${key}=${val}|" "${conf}"
+    # -i.bak is GNU+BSD; Linux image and Mac pin-regression both work.
+    sed -i.bak -E "s|^${key}=.*|${key}=${val}|" "${conf}"
+    rm -f "${conf}.bak"
   else
     printf '%s=%s\n' "${key}" "${val}" >> "${conf}"
   fi

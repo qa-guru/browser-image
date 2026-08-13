@@ -118,6 +118,9 @@ APK должен быть доступен контейнеру по HTTP(S). Э
 ```bash
 COUNT=5 ./scripts/smoke-cold.sh http://127.0.0.1:4444/wd/hub
 
+TAG=15 COUNT=1 ./scripts/smoke-cold.sh http://127.0.0.1:4444/wd/hub
+# preprod: TAG=15-preprod VERSION=15.0 COUNT=1 ./scripts/smoke-cold.sh ...
+
 COUNT=1 \
 APP_URL=https://github.com/appium/android-apidemos/releases/download/v6.0.1/ApiDemos-debug.apk \
   ./scripts/smoke-cold.sh http://127.0.0.1:4444/wd/hub
