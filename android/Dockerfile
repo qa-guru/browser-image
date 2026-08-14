@@ -9,21 +9,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG APPIUM_VERSION=3.5.2
 ARG UIAUTOMATOR2_VERSION=8.1.0
 ARG ANDROID_CMDTOOLS_VERSION=11076708
-ARG AVD_NAME=android16
-ARG PLATFORM=android-36
-ARG DEVICE=pixel
-ARG EMULATOR_IMAGE_TYPE=google_apis
 ARG ANDROID_ABI=x86_64
-ARG BUILD_TOOLS=build-tools;35.0.0
-# browsers.json browserVersion → image tag: 11.0→11 … 16.0→16 (see scripts/version-map.sh)
-ARG SDCARD_SIZE=512
-ARG USERDATA_SIZE=6144
 
 ENV ANDROID_HOME=/opt/android-sdk-linux \
     ANDROID_SDK_ROOT=/opt/android-sdk-linux \
-    AVD_NAME=${AVD_NAME} \
-    PLATFORM=${PLATFORM} \
-    EMULATOR_IMAGE_TYPE=${EMULATOR_IMAGE_TYPE} \
     ANDROID_ABI=${ANDROID_ABI} \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
@@ -85,7 +74,20 @@ RUN mkdir -p /opt/android-sdk-linux /root/.config/"Android Open Source Project" 
     && yes | sdkmanager --licenses >/dev/null \
     && ldconfig
 
+# Per-tag AVD (after shared apt/Appium/cmdline-tools so tags reuse those layers).
+# browsers.json browserVersion → image tag: 8.0→8, 10.0–16.0→10–16 (see scripts/version-map.sh)
+ARG AVD_NAME=android16
+ARG PLATFORM=android-36
+ARG DEVICE=pixel
+ARG EMULATOR_IMAGE_TYPE=google_apis
+ARG BUILD_TOOLS=build-tools;35.0.0
+ARG SDCARD_SIZE=512
+ARG USERDATA_SIZE=6144
 ARG EMULATOR_IMAGE=system-images;${PLATFORM};${EMULATOR_IMAGE_TYPE};${ANDROID_ABI}
+
+ENV AVD_NAME=${AVD_NAME} \
+    PLATFORM=${PLATFORM} \
+    EMULATOR_IMAGE_TYPE=${EMULATOR_IMAGE_TYPE}
 
 RUN sdkmanager --install \
       "emulator" \
