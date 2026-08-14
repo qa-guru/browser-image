@@ -170,13 +170,18 @@ POST → sessionId samples: **69.67, 66.22, 78.91, 75.22, 75.92 s**. Median **75
 
 Дополнительный prod smoke с `appium:app` URL и `appium:noReset=false`: sessionId **86.10 s**, touch **HTTP 200**, screenshot **HTTP 200**, VNC WebSocket **HTTP 101**. Отдельный `enableVideo=true` smoke создал валидный MP4 (**305,565 bytes**). После всех smoke: hub `used=0`, Android containers `0`.
 
-Registry: `qaguru/android:16` = prepared-runtime (userdata + helper APK + `/opt/qaguru/prepared-avd.env`).
-Docker Hub digest `sha256:1e42dd7a643b44e6739f272885b2dcadffd0715d15b34959be14d85e9cb89cef`
-(promoted from local `16-preprod` on 2026-08-06). Old unprepared base
-`sha256:566edca29639…` must not be retagged as `:16`.
+Registry: `qaguru/android:{8,10–16}` = prepared-runtime, AVD `--device pixel`, lcd/skin **1080×1920** (Hub 2026-08-14). Do not retag `*-base` as `:N`.
 
-Re-smoke after promote (prod, 6g/4cpu, COUNT=3): sessionId **66.7 / 75.6 / 90.2 s**,
-median **75.6 s**; touch/screenshot/VNC OK.
+| tag | digest |
+|-----|--------|
+| 16 | `sha256:7ef6071fe98384f68fc05bea0f8284e3ab6ca79c30485e889c6f831637e12a4d` |
+| 15 | `sha256:550d46e9dc6dd9ee35f581bbcfd4e1bb4c9f7f6d71b88f88e86f87d5b777464a` |
+| 14 | `sha256:0639b630c7702e1d736e137efaa611f5bfaeeb45e0c15d7bf5f3029a3e319e56` |
+| 13 | `sha256:3b053324f76a264e60d836d0c686275f5788764a19ac2ac4bbac78bfb8b01145` |
+| 12 | `sha256:8b6b2222430fc8849aca22dc6e493fbb010a3ead418614be1d626c3a2943466d` |
+| 11 | `sha256:f0d4b26cde79d3802d7ec6824324ec68b76b2ea04e7053b768f0469e2290bcc3` |
+| 10 | `sha256:dad29584eab214748346cb5ce6650f1f84c9ee8c463d1699cea9874695654723` |
+| 8 | `sha256:fb8efeda762b0db15ad802aa5c7430c97b5937e3ceb8df2df6321380823c8e85` |
 
 ## WARM POOL — DEFERRED
 
