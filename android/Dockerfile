@@ -142,7 +142,9 @@ RUN mkdir -p "/root/.config/Android Open Source Project" \
     && chmod +x /entrypoint.sh /prepare-avd.sh /opt/qaguru/pin-avd-display.sh \
     && /opt/qaguru/pin-avd-display.sh "/root/.android/avd/${AVD_NAME}.avd/config.ini" 1080x1920
 
-EXPOSE 4444 5900
+EXPOSE 4444
+# Selenoid live VNC (x11vnc) — product port, not an admin daemon.
+EXPOSE 5900 # NOSONAR
 
 ENTRYPOINT ["/entrypoint.sh"]
 
