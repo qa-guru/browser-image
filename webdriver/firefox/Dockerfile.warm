@@ -54,8 +54,7 @@ COPY shared/common.sh shared/entrypoint-geckodriver-warm.sh /opt/webdriver/
 RUN chmod +x /opt/webdriver/common.sh /opt/webdriver/entrypoint-geckodriver-warm.sh
 
 EXPOSE 4444
-# Selenoid live VNC (x11vnc) — product port, not an admin daemon.
-EXPOSE 5900 # NOSONAR
+# VNC 5900 is published by Selenoid via browsers.json, not EXPOSE (docker:S6473).
 HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=6 \
     CMD curl -sf "http://127.0.0.1:${GECKODRIVER_PORT}/status" >/dev/null || exit 1
 

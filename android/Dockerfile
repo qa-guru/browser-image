@@ -143,8 +143,7 @@ RUN mkdir -p "/root/.config/Android Open Source Project" \
     && /opt/qaguru/pin-avd-display.sh "/root/.android/avd/${AVD_NAME}.avd/config.ini" 1080x1920
 
 EXPOSE 4444
-# Selenoid live VNC (x11vnc) — product port, not an admin daemon.
-EXPOSE 5900 # NOSONAR
+# VNC 5900 is published by Selenoid via browsers.json, not EXPOSE (docker:S6473).
 
 ENTRYPOINT ["/entrypoint.sh"]
 

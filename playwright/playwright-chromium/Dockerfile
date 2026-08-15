@@ -48,8 +48,7 @@ USER pwuser
 WORKDIR /home/pwuser
 
 EXPOSE 3000 7070
-# Selenoid live VNC (x11vnc) — product port, not an admin daemon.
-EXPOSE 5900 # NOSONAR
+# VNC 5900 is published by Selenoid via browsers.json, not EXPOSE (docker:S6473).
 
 HEALTHCHECK --interval=5s --timeout=3s --start-period=30s --retries=6 \
     CMD node -e "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
