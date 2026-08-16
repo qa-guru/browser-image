@@ -141,7 +141,7 @@ jobs:
   deploy-smoke:
     name: Publish smoke → selenoid-tests (playwright)
     needs: docker
-    if: success() && github.event_name == 'push'
+    if: success()
     permissions:
       actions: read
       contents: read
@@ -149,8 +149,10 @@ jobs:
     secrets:
       SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
     with:
-      test_tags: playwright
+      env_profile: selenoid_github_e2e
+      test_tags: ${{ ((github.event_name == 'workflow_dispatch' && inputs.variant == 'min') || (github.event_name == 'push' && endsWith(github.ref, '-min'))) && 'min' || 'playwright' }}
       source_variant: playwright
+      webdriver_variant: ${{ ((github.event_name == 'workflow_dispatch' && inputs.variant == 'min') || (github.event_name == 'push' && endsWith(github.ref, '-min'))) && 'min' || '' }}
       source_version: ${{ needs.docker.outputs.version }}
       source_ref: ${{ github.ref }}
       summary_title: Publish smoke → selenoid-tests (playwright)

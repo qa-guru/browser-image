@@ -76,7 +76,7 @@ jobs:
   deploy-smoke:
     name: Publish smoke → selenoid-tests (video-recorder)
     needs: docker
-    if: success() && github.event_name == 'push'
+    if: success()
     permissions:
       actions: read
       contents: read
@@ -84,6 +84,7 @@ jobs:
     secrets:
       SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
     with:
+      env_profile: selenoid_github_api
       test_tags: smoke
       source_variant: video-recorder
       source_version: ${{ needs.docker.outputs.version }}

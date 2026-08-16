@@ -100,7 +100,7 @@ jobs:
   smoke-meta:
     name: Resolve smoke dispatch metadata
     needs: docker
-    if: success() && github.event_name == 'push'
+    if: success()
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -110,6 +110,13 @@ jobs:
       - name: Resolve version
         id: version
         run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Manual publish is all/both — cheap 01 min slice against primary chrome major.
+            echo "browser=chrome" >> "$GITHUB_OUTPUT"
+            echo "variant=min" >> "$GITHUB_OUTPUT"
+            echo "version=149" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           ref="${GITHUB_REF#refs/tags/}"
           ref="${ref#webdriver/}"
           browser="chrome"
@@ -134,7 +141,7 @@ jobs:
   deploy-smoke:
     name: Publish smoke → selenoid-tests (webdriver)
     needs: smoke-meta
-    if: success() && github.event_name == 'push'
+    if: success()
     permissions:
       actions: read
       contents: read
@@ -142,6 +149,7 @@ jobs:
     secrets:
       SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
     with:
+      env_profile: selenoid_github_e2e
       test_tags: smoke
       source_variant: webdriver
       source_browser: ${{ needs.smoke-meta.outputs.source_browser }}
