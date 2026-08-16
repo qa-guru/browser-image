@@ -41,7 +41,7 @@ Sidecar-образ для Selenoid: пишет H.264 MP4 с X11-дисплея b
 |------|-------------|
 | [Awesome epic video-recorder](https://qa-guru.github.io/selenoid-tests/reports/latest/awesome/) | Hub `/video` + UI proxy — session MP4 after `enableVideo` |
 | [Stack dashboard](https://qa-guru.github.io/selenoid-tests/reports/latest/dashboard/) | Full Selenoid pyramid (all components) |
-| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure (`testVideoRecorder` smoke) |
+| [selenoid-tests](https://github.com/qa-guru/selenoid-tests) | Orchestrator + merged Allure (Go slice `api`: `TestHubVideoSession_*` + `TestUiVideo*`) |
 
 ## Build
 
@@ -76,4 +76,4 @@ selenoid -video-recorder-image qaguru/video-recorder:latest ...
 
 CM и dev-скрипты используют тот же ref.
 
-После `git tag video-recorder/<version>` CI пушит образ и дергает `selenoid-tests` deploy-smoke (`testVideoRecorder`: `HubVideoSessionApiTests` + `UiVideoSessionApiTests`).
+После `git tag video-recorder/<version>` CI пушит образ и дергает `selenoid-tests` deploy-smoke (`source_variant=video-recorder` → slice `api`: `TestHubVideoSession_*` + `TestUiVideo*`).

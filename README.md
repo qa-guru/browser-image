@@ -106,7 +106,7 @@ Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-im
 |-------|--------|----------|--------------|
 | [`playwright/`](playwright/) | `qaguru/playwright-*` | `mcr.microsoft.com/playwright` + npm `@playwright/test` | Playwright nodes + `chromium-min` |
 | [`webdriver/`](webdriver/) | `qaguru/webdriver-chrome*` · `webdriver-firefox*` · `webdriver-msedge*` | CfT / Mozilla / Microsoft | warm (VNC) + min |
-| [`video-recorder/`](video-recorder/) | `qaguru/video-recorder` | fork `aerokube/images/selenium/video` | Selenoid `enableVideo` sidecar · deploy-smoke `testVideoRecorder` |
+| [`video-recorder/`](video-recorder/) | `qaguru/video-recorder` | fork `aerokube/images/selenium/video` | Selenoid `enableVideo` sidecar · deploy-smoke `source_variant=video-recorder` |
 
 **Twilio** (`twilio/selenoid`) — исторический legacy; в `browsers.json`, CI и сборке не используется.
 

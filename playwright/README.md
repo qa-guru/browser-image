@@ -60,7 +60,7 @@ Playwright test  ──►  selenoid hub  ──►  qaguru/playwright-chromium:
                                               (этот репозиторий)
 ```
 
-WebDriver Chrome — [`webdriver/`](../webdriver/) (`qaguru/webdriver-chrome*-min`). Firefox и Edge в Selenium-стеке не публикуются — используйте `playwright-firefox` / `playwright-msedge`.
+WebDriver — [`webdriver/`](../webdriver/): Chrome 149, Firefox 151, Edge 145 (`publish-webdriver.yml`). Playwright Firefox / Edge — отдельные ключи `playwright-firefox` / `playwright-msedge`.
 
 ## Связанные репозитории
 
@@ -111,7 +111,7 @@ Firefox, WebKit и `playwright-chromium:*-min` порт 7070 не поднима
 
 В hub [два независимых стека](https://github.com/qa-guru/selenoid/blob/main/docs/browser-versions.md). Поле `version` в `browsers.json` для них означает разное:
 
-| | Playwright (`qaguru/playwright-*`) | WebDriver (`qaguru/webdriver-chrome`) |
+| | Playwright (`qaguru/playwright-*`) | WebDriver (`qaguru/webdriver-*`) |
 |---|---|---|
 | **Протокол** | WebSocket `/playwright/...` | HTTP `POST /wd/hub/session` |
 | **Что означает версия** | npm `@playwright/test` (`1.61.1`) | мажор браузера (`149.0` → Chrome 149.x) |
@@ -126,8 +126,8 @@ Firefox, WebKit и `playwright-chromium:*-min` порт 7070 не поднима
 |---|---|---|---|---|
 | Chromium | `playwright-chromium` **1.61.1** | Chromium **149** | `chrome` **149.0** | `qaguru/webdriver-chrome:149` |
 | Google Chrome | `playwright-chrome` **1.61.1** | stable channel | — | — |
-| Firefox | `playwright-firefox` **1.61.1** | Firefox **151** | — | — |
-| Microsoft Edge | `playwright-msedge` **1.61.1** | stable channel | — | — |
+| Firefox | `playwright-firefox` **1.61.1** | Firefox **151** | `firefox` **151.0** | `qaguru/webdriver-firefox:151` |
+| Microsoft Edge | `playwright-msedge` **1.61.1** | stable channel | `msedge` **145.0** | `qaguru/webdriver-msedge:145` |
 | WebKit | `playwright-webkit` **1.61.1** | WebKit **26.5** | — | — |
 
 Стеки **нельзя** подменять: `chrome:149.0` ≠ `playwright-chromium:1.61.1`.
@@ -142,6 +142,8 @@ Firefox, WebKit и `playwright-chromium:*-min` порт 7070 не поднима
 | `playwright-chrome` | `1.61.1` | 1.61.1 | `qaguru/playwright-chrome:<версия>` |
 | `playwright-msedge` | `1.61.1` | 1.61.1 | `qaguru/playwright-msedge:<версия>` |
 | `chrome` | `149.0` | 149.0, 149.0-min, 148.0, 148.0-min | `qaguru/webdriver-chrome:149`, `qaguru/webdriver-chrome:149-min` |
+| `firefox` | `151.0` | 151.0, 151.0-min, 150.0, 150.0-min | `qaguru/webdriver-firefox:151`, `qaguru/webdriver-firefox:151-min` |
+| `msedge` | `145.0` | 145.0, 145.0-min, 144.0, 144.0-min | `qaguru/webdriver-msedge:145`, `qaguru/webdriver-msedge:145-min` |
 
 ### Движки внутри Playwright-образов
 
@@ -308,7 +310,7 @@ CI (`publish.yml`) публикует `-min` автоматически вмес
 
 WebDriver `chrome` / `firefox` и Playwright `chrome` / `firefox` — разные ключи в каталоге:
 
-- WebDriver: `chrome`, `firefox`
+- WebDriver: `chrome`, `firefox`, `msedge`
 - Playwright: `playwright-chromium`, `playwright-firefox`, `playwright-webkit`, `playwright-chrome`, `playwright-msedge`
 
 ---
