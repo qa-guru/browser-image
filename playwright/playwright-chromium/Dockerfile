@@ -41,7 +41,7 @@ RUN mkdir -p /opt/playwright /tmp/.X11-unix \
     && chmod 1777 /tmp/.X11-unix
 
 COPY --from=devtools-proxy /devtools-proxy /usr/local/bin/devtools-proxy
-COPY shared/common.sh shared/entrypoint.sh shared/server.cjs shared/launch-headed-browser.js /opt/playwright/
+COPY shared/common.sh shared/entrypoint.sh shared/server.cjs shared/screen-resolution.cjs shared/launch-headed-browser.js /opt/playwright/
 RUN chmod +x /opt/playwright/entrypoint.sh
 
 USER pwuser

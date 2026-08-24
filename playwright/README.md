@@ -323,10 +323,10 @@ Hub передаёт env (см. `playwright_docker.go` в [qa-guru/selenoid](htt
 |---|---|
 | `ENABLE_VNC` | x11vnc на :5900 |
 | `ENABLE_VIDEO` | Xvfb для video-recorder sidecar |
-| `SCREEN_RESOLUTION` | разрешение Xvfb |
+| `SCREEN_RESOLUTION` | разрешение Xvfb **и** окна headed-launcher (UI Manual session) |
 | `PW_PORT` | порт run-server (обычно 3000) |
 | `PW_HEADLESS` | headless для run-server |
-| `MANUAL_SESSION` | headed launcher для UI |
+| `MANUAL_SESSION` | headed launcher для UI (`viewport: null` + размер = `SCREEN_RESOLUTION`) |
 
 Пути в образе:
 

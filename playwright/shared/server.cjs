@@ -37,17 +37,7 @@ function parsePort(name, defaultValue) {
   return port;
 }
 
-function parseScreenResolution(name) {
-  const value = process.env[name];
-  if (typeof value !== "string" || value.length === 0) {
-    return null;
-  }
-  const match = /^(\d+)x(\d+)(?:x\d+)?$/.exec(value.trim());
-  if (!match) {
-    return null;
-  }
-  return { width: Number(match[1]), height: Number(match[2]) };
-}
+const { parseScreenResolution } = require("./screen-resolution.cjs");
 
 const browserTypeName = env("PW_BROWSER_TYPE", "chromium");
 const browserType = browserTypes[browserTypeName];
@@ -84,7 +74,7 @@ if (browserTypeName === "chromium") {
     "--disable-gpu",
     "--remote-debugging-port=0",
   ];
-  const screenSize = parseScreenResolution("SCREEN_RESOLUTION");
+  const screenSize = parseScreenResolution(env("SCREEN_RESOLUTION"));
   if (screenSize) {
     launchOptions.args.push(`--window-size=${screenSize.width},${screenSize.height}`);
   }

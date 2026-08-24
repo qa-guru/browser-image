@@ -41,7 +41,7 @@ RUN mkdir -p /ms-playwright /ms-playwright-agent /opt/playwright \
     && chmod -R 777 /ms-playwright
 
 COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
-COPY shared/server.cjs shared/entrypoint-min.sh /opt/playwright/
+COPY shared/server.cjs shared/screen-resolution.cjs shared/entrypoint-min.sh /opt/playwright/
 RUN chmod +x /opt/playwright/entrypoint-min.sh
 
 USER pwuser
