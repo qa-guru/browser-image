@@ -49,9 +49,43 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 143' TERM INT
 
+wait_for_wm() {
+  local i
+  for ((i = 0; i < 50; i++)); do
+    if xprop -root -display "${DISPLAY}" _NET_SUPPORTING_WM_CHECK 2>/dev/null | grep -qi 'window id'; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  echo "fluxbox did not advertise a WM in time; continuing" >&2
+}
+
+# Burst-maximize top-level windows so Firefox/WebKit fill Xvfb even if they
+# mapped before fluxbox apps rules applied. Do not run forever (dialogs).
+start_window_fitter() {
+  if ! command -v wmctrl >/dev/null 2>&1; then
+    return 0
+  fi
+  local w h
+  w="${SCREEN_RESOLUTION%%x*}"
+  h="${SCREEN_RESOLUTION#*x}"
+  h="${h%%x*}"
+  (
+    set +e
+    for ((i = 0; i < 40; i++)); do
+      while read -r id; do
+        [ -n "${id}" ] || continue
+        wmctrl -i -r "${id}" -b add,maximized_vert,maximized_horz >/dev/null 2>&1
+        wmctrl -i -r "${id}" -e "0,0,0,${w},${h}" >/dev/null 2>&1
+      done < <(wmctrl -l 2>/dev/null | awk '{print $1}')
+      sleep 0.25
+    done
+  ) &
+}
+
 start_fluxbox() {
   # Chrome/Firefox on raw Xvfb ignore --window-size and --start-maximized.
-  # fluxbox owns the display and auto-maximizes every mapped window (VNC).
+  # fluxbox owns the display; apps file strips WM chrome and maximizes.
   if ! command -v fluxbox >/dev/null 2>&1; then
     return 0
   fi
@@ -63,6 +97,8 @@ start_fluxbox() {
 session.styleOverlay: ${fbhome}/.fluxbox/overlay
 session.screen0.toolbar.visible: false
 session.screen0.workspaces: 1
+session.screen0.defaultDeco: NONE
+session.screen0.fullMaximization: true
 session.screen0.rootCommand: fbsetroot -solid black
 EOF
   cat > "${fbhome}/.fluxbox/overlay" <<'EOF'
@@ -74,11 +110,17 @@ fbsetroot -solid black
 exec fluxbox
 EOF
   chmod +x "${fbhome}/.fluxbox/startup"
-  cat > "${fbhome}/.fluxbox/apps" <<'EOF'
-[app] (name=.*)
+  local apps_src="/opt/playwright/fluxbox.apps"
+  if [[ -f "${apps_src}" ]]; then
+    cp "${apps_src}" "${fbhome}/.fluxbox/apps"
+  else
+    cat > "${fbhome}/.fluxbox/apps" <<'EOF'
+[app] (name=*)
+  [Deco] {NONE}
   [Maximized] {yes}
 [end]
 EOF
+  fi
   fluxbox >/tmp/fluxbox.log 2>&1 &
   fluxbox_pid=$!
   if command -v fbsetroot >/dev/null 2>&1; then
@@ -87,6 +129,7 @@ EOF
   local i
   for ((i = 0; i < 20; i++)); do
     if kill -0 "${fluxbox_pid}" 2>/dev/null; then
+      wait_for_wm
       return 0
     fi
     sleep 0.1
@@ -98,6 +141,7 @@ if [[ "${needs_display}" == "true" ]]; then
   xvfb_pid=$!
   wait_for_x
   start_fluxbox
+  start_window_fitter
 fi
 
 if [[ "${ENABLE_VNC}" == "true" ]]; then

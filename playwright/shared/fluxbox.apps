@@ -1,0 +1,7 @@
+# Fluxbox matches with glob, not regex.
+# (name=.*) only matches titles that start with '.'; Firefox's "Unnamed" does not.
+# (name=*) matches every top-level window so the browser fills VNC.
+[app] (name=*)
+  [Deco] {NONE}
+  [Maximized] {yes}
+[end]

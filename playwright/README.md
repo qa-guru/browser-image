@@ -323,7 +323,7 @@ Hub передаёт env (см. `playwright_docker.go` в [qa-guru/selenoid](htt
 |---|---|
 | `ENABLE_VNC` | x11vnc на :5900 |
 | `ENABLE_VIDEO` | Xvfb для video-recorder sidecar |
-| `SCREEN_RESOLUTION` | разрешение Xvfb **и** окна headed-launcher (UI Manual session). На Xvfb без WM Chrome игнорирует `--window-size`; в образе **fluxbox** авто-максимизирует окна под VNC. |
+| `SCREEN_RESOLUTION` | разрешение Xvfb **и** окна headed-launcher (UI Manual session). На Xvfb без WM Chrome игнорирует `--window-size`; **fluxbox** без рамки (`defaultDeco: NONE`, glob `(name=*)`) максимизирует окно под VNC. |
 | `PW_PORT` | порт run-server (обычно 3000) |
 | `PW_HEADLESS` | headless для run-server |
 | `MANUAL_SESSION` | headed launcher для UI (`viewport: null` + размер = `SCREEN_RESOLUTION`, CDP maximize) |
