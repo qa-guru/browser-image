@@ -55,18 +55,35 @@ start_fluxbox() {
   if ! command -v fluxbox >/dev/null 2>&1; then
     return 0
   fi
-  mkdir -p "${HOME:-/home/pwuser}/.fluxbox"
-  cat > "${HOME:-/home/pwuser}/.fluxbox/init" <<'EOF'
+  local fbhome="${HOME:-/home/pwuser}"
+  mkdir -p "${fbhome}/.fluxbox"
+  # Fluxbox calls fbsetbg on start unless overlay has `background: unset`.
+  # Without feh/Esetroot that pops xmessage ("install Eterm") over VNC.
+  cat > "${fbhome}/.fluxbox/init" <<EOF
+session.styleOverlay: ${fbhome}/.fluxbox/overlay
 session.screen0.toolbar.visible: false
 session.screen0.workspaces: 1
+session.screen0.rootCommand: fbsetroot -solid black
 EOF
-  cat > "${HOME:-/home/pwuser}/.fluxbox/apps" <<'EOF'
+  cat > "${fbhome}/.fluxbox/overlay" <<'EOF'
+background: unset
+EOF
+  cat > "${fbhome}/.fluxbox/startup" <<'EOF'
+#!/bin/sh
+fbsetroot -solid black
+exec fluxbox
+EOF
+  chmod +x "${fbhome}/.fluxbox/startup"
+  cat > "${fbhome}/.fluxbox/apps" <<'EOF'
 [app] (name=.*)
   [Maximized] {yes}
 [end]
 EOF
   fluxbox >/tmp/fluxbox.log 2>&1 &
   fluxbox_pid=$!
+  if command -v fbsetroot >/dev/null 2>&1; then
+    fbsetroot -solid black >/dev/null 2>&1 || true
+  fi
   local i
   for ((i = 0; i < 20; i++)); do
     if kill -0 "${fluxbox_pid}" 2>/dev/null; then
