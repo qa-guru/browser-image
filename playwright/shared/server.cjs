@@ -38,6 +38,7 @@ function parsePort(name, defaultValue) {
 }
 
 const { parseScreenResolution } = require("./screen-resolution.cjs");
+const { chromiumHeadedArgs } = require("./headed-window.cjs");
 
 const browserTypeName = env("PW_BROWSER_TYPE", "chromium");
 const browserType = browserTypes[browserTypeName];
@@ -72,12 +73,8 @@ if (browserTypeName === "chromium") {
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    "--remote-debugging-port=0",
+    ...chromiumHeadedArgs(parseScreenResolution(env("SCREEN_RESOLUTION"))),
   ];
-  const screenSize = parseScreenResolution(env("SCREEN_RESOLUTION"));
-  if (screenSize) {
-    launchOptions.args.push(`--window-size=${screenSize.width},${screenSize.height}`);
-  }
 }
 
 const channel = env("PW_BROWSER_CHANNEL");

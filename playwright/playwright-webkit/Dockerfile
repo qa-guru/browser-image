@@ -17,6 +17,7 @@ USER root
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         dumb-init \
+        fluxbox \
         x11-utils \
         x11vnc \
         xvfb \
@@ -26,7 +27,7 @@ RUN apt-get update \
 RUN mkdir -p /opt/playwright /tmp/.X11-unix \
     && chmod 1777 /tmp/.X11-unix
 
-COPY shared/common.sh shared/entrypoint.sh shared/server.cjs shared/screen-resolution.cjs shared/launch-headed-browser.js /opt/playwright/
+COPY shared/common.sh shared/entrypoint.sh shared/server.cjs shared/screen-resolution.cjs shared/headed-window.cjs shared/launch-headed-browser.js /opt/playwright/
 RUN chmod +x /opt/playwright/entrypoint.sh
 
 USER pwuser

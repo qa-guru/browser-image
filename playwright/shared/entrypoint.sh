@@ -42,16 +42,45 @@ cleanup() {
   terminate_pid "${headed_pid:-}"
   terminate_pid "${devtools_proxy_pid:-}"
   terminate_pid "${vnc_pid:-}"
+  terminate_pid "${fluxbox_pid:-}"
   terminate_pid "${xvfb_pid:-}"
 }
 
 trap cleanup EXIT
 trap 'exit 143' TERM INT
 
+start_fluxbox() {
+  # Chrome/Firefox on raw Xvfb ignore --window-size and --start-maximized.
+  # fluxbox owns the display and auto-maximizes every mapped window (VNC).
+  if ! command -v fluxbox >/dev/null 2>&1; then
+    return 0
+  fi
+  mkdir -p "${HOME:-/home/pwuser}/.fluxbox"
+  cat > "${HOME:-/home/pwuser}/.fluxbox/init" <<'EOF'
+session.screen0.toolbar.visible: false
+session.screen0.workspaces: 1
+EOF
+  cat > "${HOME:-/home/pwuser}/.fluxbox/apps" <<'EOF'
+[app] (name=.*)
+  [Maximized] {yes}
+[end]
+EOF
+  fluxbox >/tmp/fluxbox.log 2>&1 &
+  fluxbox_pid=$!
+  local i
+  for ((i = 0; i < 20; i++)); do
+    if kill -0 "${fluxbox_pid}" 2>/dev/null; then
+      return 0
+    fi
+    sleep 0.1
+  done
+}
+
 if [[ "${needs_display}" == "true" ]]; then
   Xvfb "${DISPLAY}" -screen 0 "${SCREEN_RESOLUTION}" -ac +extension RANDR -noreset -listen tcp >/dev/null 2>&1 &
   xvfb_pid=$!
   wait_for_x
+  start_fluxbox
 fi
 
 if [[ "${ENABLE_VNC}" == "true" ]]; then

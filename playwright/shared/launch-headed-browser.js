@@ -1,5 +1,6 @@
 const { chromium, firefox, webkit } = require("playwright-core");
 const { screenSizeFromEnv } = require("./screen-resolution.cjs");
+const { chromiumHeadedArgs, firefoxHeadedArgs } = require("./headed-window.cjs");
 
 const browserTypes = { chromium, firefox, webkit };
 
@@ -11,14 +12,9 @@ process.env.DISPLAY = process.env.DISPLAY || ":99";
 
 const launchOptions = { headless: false };
 if (browserTypeName === "chromium") {
-  // Same CDP proxy as server.cjs, plus window bounds = Xvfb (VNC) size.
-  launchOptions.args = [
-    "--remote-debugging-port=0",
-    `--window-size=${screenSize.width},${screenSize.height}`,
-    "--window-position=0,0",
-  ];
+  launchOptions.args = chromiumHeadedArgs(screenSize);
 } else if (browserTypeName === "firefox") {
-  launchOptions.args = ["-width", String(screenSize.width), "-height", String(screenSize.height)];
+  launchOptions.args = firefoxHeadedArgs(screenSize);
 }
 
 const channel = process.env.PW_BROWSER_CHANNEL;
@@ -31,26 +27,39 @@ if (proxyServer) {
 }
 
 async function fitWindowToScreen(page) {
-  if (browserTypeName === "chromium") {
-    const session = await page.context().newCDPSession(page);
-    const { windowId } = await session.send("Browser.getWindowForTarget");
-    await session.send("Browser.setWindowBounds", {
-      windowId,
-      bounds: {
-        left: 0,
-        top: 0,
-        width: screenSize.width,
-        height: screenSize.height,
-        windowState: "normal",
-      },
-    });
-    return;
+  try {
+    if (browserTypeName === "chromium") {
+      const session = await page.context().newCDPSession(page);
+      const { windowId } = await session.send("Browser.getWindowForTarget");
+      // Width/height = Xvfb size often exceeds the work area (window chrome) and
+      // Chrome then rejects the call — that used to kill this process (exit 1).
+      try {
+        await session.send("Browser.setWindowBounds", {
+          windowId,
+          bounds: { windowState: "maximized" },
+        });
+      } catch {
+        await session.send("Browser.setWindowBounds", {
+          windowId,
+          bounds: {
+            left: 0,
+            top: 0,
+            width: screenSize.width,
+            height: screenSize.height,
+            windowState: "normal",
+          },
+        });
+      }
+      return;
+    }
+    await page.setViewportSize(screenSize);
+    await page.evaluate(({ width, height }) => {
+      window.moveTo(0, 0);
+      window.resizeTo(width, height);
+    }, screenSize);
+  } catch (err) {
+    console.error("fitWindowToScreen:", err.message || err);
   }
-  await page.setViewportSize(screenSize);
-  await page.evaluate(({ width, height }) => {
-    window.moveTo(0, 0);
-    window.resizeTo(width, height);
-  }, screenSize);
 }
 
 (async () => {
