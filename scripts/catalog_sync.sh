@@ -79,7 +79,7 @@ clone_repo qa-guru/selenoid-ui "${WORKDIR}/selenoid-ui"
 python3 "${PY}" --plan "${PLAN}" --file "${WORKDIR}/selenoid-ui/browsers.json"
 commit_push "${WORKDIR}/selenoid-ui" browsers.json
 
-# LAST — triggers selenoid.qa.guru deploy.yml on browsers-production.json
+# LAST — deploy.yml browsers-only: copy + docker pull + SIGHUP hub (no hub/UI bounce).
 clone_repo qa-guru/selenoid.qa.guru "${WORKDIR}/selenoid-qa-guru"
 python3 "${PY}" --plan "${PLAN}" \
   --file "${WORKDIR}/selenoid-qa-guru/deploy/browsers-production.json"

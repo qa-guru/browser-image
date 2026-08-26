@@ -1,4 +1,5 @@
-# Manual / retry: pull current browsers-production.json images onto Box1.
+# Manual / retry: pull current browsers-production.json images onto Box1
+# (browsers-only: omit version/ui_version → copy+pull+SIGHUP).
 # Automatic path: watch.yml (catalog_sync last on majors, pull-prod on patches).
 # publish.yml / publish-webdriver.yml dispatch only on workflow_dispatch.
 
