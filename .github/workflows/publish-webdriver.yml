@@ -12,7 +12,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: browser-image-publish
+  # Per-ref so tag publishes (msedge-151 vs 151-min vs 150) do not pending-cancel
+  # each other. Shared "browser-image-publish" dropped every tag except the last.
+  group: browser-image-webdriver-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:

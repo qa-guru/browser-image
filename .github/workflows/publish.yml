@@ -20,7 +20,7 @@ on:
         default: full
 
 concurrency:
-  group: browser-image-publish
+  group: browser-image-playwright-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
