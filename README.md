@@ -149,8 +149,8 @@ Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-im
 1. Резолв latest **stable** (CfT last-known-good, Firefox product-details + FTP, Edge apt amd64, npm `@playwright/test` + MCR `vX-noble`).
 2. No-op, если окно default+regression уже совпадает.
 3. Commit `pins.json` → git-теги **по одному** (`webdriver/chrome-N`, `…-min`, `playwright/x.y.z`) → Docker Hub 200. Тег-publish **не** диспатчит прод (иначе N деплоев до каталога).
-4. Мажор: SSOT-каталог в nested-репах, **последним** `deploy/browsers-production.json` на [selenoid.qa.guru](https://github.com/qa-guru/selenoid.qa.guru) (сам деплоит Box1, `pull_browsers=always`).
-5. Патч того же мажора: `pull-prod` (`pull_browsers=always`). Поля `version` / `ui_version` **не передаются** — пины хаба и UI не трогаем.
+4. Мажор: SSOT-каталог в nested-репах, **последним** `deploy/browsers-production.json` на [selenoid.qa.guru](https://github.com/qa-guru/selenoid.qa.guru). Box1 копирует файл, `docker pull`, **SIGHUP хабу** (сессии живые). Hub/UI процессы не гасятся.
+5. Патч того же мажора: `pull-prod` (`pull_browsers=always`, без `version` / `ui_version`) — тот же browsers-only путь.
 
 Локально: `python3 scripts/watch_upstream.py self-check && python3 scripts/watch_upstream.py resolve`.
 
