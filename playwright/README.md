@@ -326,7 +326,7 @@ Hub передаёт env (см. `playwright_docker.go` в [qa-guru/selenoid](htt
 | `SCREEN_RESOLUTION` | разрешение Xvfb **и** окна headed-launcher (UI Manual session). На Xvfb без WM Chrome игнорирует `--window-size`; **fluxbox** без рамки (`defaultDeco: NONE`, glob `(name=*)`) максимизирует окно под VNC. |
 | `PW_PORT` | порт run-server (обычно 3000) |
 | `PW_HEADLESS` | headless для run-server |
-| `MANUAL_SESSION` | headed launcher для UI (`viewport: null` + размер = `SCREEN_RESOLUTION`, CDP maximize) |
+| `MANUAL_SESSION` | UI Create Session: connect to `launchServer` and open one `viewport: null` page (not a second `launch()`). Firefox also gets `-width/-height` on the server. |
 
 Пути в образе:
 

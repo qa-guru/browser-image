@@ -24,8 +24,8 @@ ENV PW_HOST=0.0.0.0 \
     NODE_PATH=/usr/lib/node_modules
 
 USER root
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+COPY shared/install-vnc-deps.sh /tmp/install-vnc-deps.sh
+RUN bash /tmp/install-vnc-deps.sh \
         dumb-init \
         fluxbox \
         wmctrl \

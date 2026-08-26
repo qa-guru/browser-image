@@ -1,29 +1,44 @@
+const http = require("node:http");
 const { chromium, firefox, webkit } = require("playwright-core");
 const { screenSizeFromEnv } = require("./screen-resolution.cjs");
-const { chromiumHeadedArgs, firefoxHeadedArgs } = require("./headed-window.cjs");
+const { playwrightWsEndpoint } = require("./headed-window.cjs");
 
 const browserTypes = { chromium, firefox, webkit };
 
 const browserTypeName = process.env.PW_BROWSER_TYPE || "chromium";
 const browserType = browserTypes[browserTypeName] || chromium;
 const screenSize = screenSizeFromEnv();
+const port = process.env.PW_PORT || "3000";
+const wsEndpoint = playwrightWsEndpoint();
 
 process.env.DISPLAY = process.env.DISPLAY || ":99";
 
-const launchOptions = { headless: false };
-if (browserTypeName === "chromium") {
-  launchOptions.args = chromiumHeadedArgs(screenSize);
-} else if (browserTypeName === "firefox") {
-  launchOptions.args = firefoxHeadedArgs(screenSize);
-}
-
-const channel = process.env.PW_BROWSER_CHANNEL;
-if (channel) {
-  launchOptions.channel = channel;
-}
-const proxyServer = process.env.PW_PROXY;
-if (proxyServer) {
-  launchOptions.proxy = { server: proxyServer };
+function waitForServer(timeoutMs = 30000) {
+  const deadline = Date.now() + timeoutMs;
+  return new Promise((resolve, reject) => {
+    const tryOnce = () => {
+      const req = http.get(`http://127.0.0.1:${port}/`, (res) => {
+        res.resume();
+        if (res.statusCode === 200) {
+          resolve();
+          return;
+        }
+        if (Date.now() > deadline) {
+          reject(new Error(`Playwright server HTTP ${res.statusCode}`));
+          return;
+        }
+        setTimeout(tryOnce, 100);
+      });
+      req.on("error", () => {
+        if (Date.now() > deadline) {
+          reject(new Error("Playwright server did not become ready"));
+          return;
+        }
+        setTimeout(tryOnce, 100);
+      });
+    };
+    tryOnce();
+  });
 }
 
 async function fitWindowToScreen(page) {
@@ -31,8 +46,6 @@ async function fitWindowToScreen(page) {
     if (browserTypeName === "chromium") {
       const session = await page.context().newCDPSession(page);
       const { windowId } = await session.send("Browser.getWindowForTarget");
-      // Width/height = Xvfb size often exceeds the work area (window chrome) and
-      // Chrome then rejects the call — that used to kill this process (exit 1).
       try {
         await session.send("Browser.setWindowBounds", {
           windowId,
@@ -52,7 +65,7 @@ async function fitWindowToScreen(page) {
       }
       return;
     }
-    await page.setViewportSize(screenSize);
+    // Do not setViewportSize: it fights WM maximize (window chrome vs Xvfb).
     await page.evaluate(({ width, height }) => {
       window.moveTo(0, 0);
       window.resizeTo(width, height);
@@ -63,12 +76,14 @@ async function fitWindowToScreen(page) {
 }
 
 (async () => {
-  const browser = await browserType.launch(launchOptions);
-  // viewport:null — do not shrink the OS window to Playwright's 1280×720 default.
+  await waitForServer();
+  // Same browser as launchServer — a second launch() stacked a small Firefox/WebKit
+  // window on top of the server process (VNC showed the nested frame).
+  const browser = await browserType.connect(wsEndpoint);
   const page = await browser.newPage({ viewport: null });
   await page.goto("about:blank");
   await fitWindowToScreen(page);
-  browser.on("disconnected", () => process.exit(0));
+  await new Promise(() => {});
 })().catch((err) => {
   console.error("Failed to launch headed browser for VNC:", err.message || err);
   process.exit(1);

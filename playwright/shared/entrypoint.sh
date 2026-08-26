@@ -77,7 +77,7 @@ start_window_fitter() {
         [ -n "${id}" ] || continue
         wmctrl -i -r "${id}" -b add,maximized_vert,maximized_horz >/dev/null 2>&1
         wmctrl -i -r "${id}" -e "0,0,0,${w},${h}" >/dev/null 2>&1
-      done < <(wmctrl -l 2>/dev/null | awk '{print $1}')
+      done < <(wmctrl -l 2>/dev/null | awk 'tolower($0) ~ /xmessage|fbsetbg/ {next} {print $1}')
       sleep 0.25
     done
   ) &
@@ -115,6 +115,10 @@ EOF
     cp "${apps_src}" "${fbhome}/.fluxbox/apps"
   else
     cat > "${fbhome}/.fluxbox/apps" <<'EOF'
+[app] (name=xmessage)
+  [Hidden] {yes}
+  [Minimized] {yes}
+[end]
 [app] (name=*)
   [Deco] {NONE}
   [Maximized] {yes}
@@ -126,6 +130,7 @@ EOF
   if command -v fbsetroot >/dev/null 2>&1; then
     fbsetroot -solid black >/dev/null 2>&1 || true
   fi
+  pkill -f '^xmessage' >/dev/null 2>&1 || true
   local i
   for ((i = 0; i < 20; i++)); do
     if kill -0 "${fluxbox_pid}" 2>/dev/null; then
@@ -163,11 +168,14 @@ if command -v devtools-proxy >/dev/null 2>&1; then
   devtools_proxy_pid=$!
 fi
 
+node /opt/playwright/server.cjs &
+server_pid=$!
+
+# Connect to launchServer (do not launch() a second browser — that nested a
+# small Firefox/WebKit window on VNC). Helper waits for HTTP :PW_PORT.
 if [[ "${MANUAL_SESSION}" == "true" && "${PW_HEADLESS}" == "false" && "${ENABLE_VNC}" == "true" ]]; then
   node /opt/playwright/launch-headed-browser.js >>/tmp/headed-launch.log 2>&1 &
   headed_pid=$!
 fi
 
-node /opt/playwright/server.cjs &
-server_pid=$!
 wait "${server_pid}"

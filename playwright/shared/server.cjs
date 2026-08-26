@@ -38,7 +38,7 @@ function parsePort(name, defaultValue) {
 }
 
 const { parseScreenResolution } = require("./screen-resolution.cjs");
-const { chromiumHeadedArgs } = require("./headed-window.cjs");
+const { headedLaunchArgs } = require("./headed-window.cjs");
 
 const browserTypeName = env("PW_BROWSER_TYPE", "chromium");
 const browserType = browserTypes[browserTypeName];
@@ -64,17 +64,17 @@ if (proxyServer) {
   launchOptions.proxy = { server: proxyServer };
 }
 
-if (browserTypeName === "chromium") {
-  // --remote-debugging-port=0: Chrome picks a random TCP CDP port and writes
-  // DevToolsActivePort. Playwright still uses --remote-debugging-pipe for its
-  // own transport; the hub reaches CDP via the static proxy on container :7070.
-  // Do not pin a concrete debug port — that breaks Playwright's launch.
-  launchOptions.args = [
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    ...chromiumHeadedArgs(parseScreenResolution(env("SCREEN_RESOLUTION"))),
-  ];
+const screenSize = parseScreenResolution(env("SCREEN_RESOLUTION"));
+const extraChromium =
+  browserTypeName === "chromium"
+    ? ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+    : [];
+const launchArgs = headedLaunchArgs(browserTypeName, screenSize, extraChromium);
+if (launchArgs.length > 0) {
+  // Chromium: --remote-debugging-port=0 so Chrome writes DevToolsActivePort;
+  // hub CDP is the static proxy on :7070. Do not pin a debug port.
+  // Firefox: -width/-height so the launchServer window matches Xvfb (WebKit ignores args).
+  launchOptions.args = launchArgs;
 }
 
 const channel = env("PW_BROWSER_CHANNEL");
