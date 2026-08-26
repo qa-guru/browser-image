@@ -2,7 +2,8 @@
 # Apply catalog updates to GitHub consumers after Hub 200.
 # Prod (qa-guru/selenoid.qa.guru deploy/browsers-production.json) is last —
 # that push triggers deploy.yml (pull_browsers=always). Do not also dispatch
-# deploy-selenoid when this script pushed prod.
+# deploy-selenoid from watch when this script pushed prod (majors).
+# Never write hub/UI version fields here — catalog window only.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

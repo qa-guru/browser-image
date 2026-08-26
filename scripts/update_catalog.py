@@ -99,8 +99,27 @@ def rewrite_playwright(catalog: dict[str, Any], pins: dict) -> None:
         log(f"{name}: default {default} + {regression}")
 
 
+_SHORT_LIST = re.compile(
+    r"\[\n( +)(\"[^\"]*\"(?:\n\1\"[^\"]*\")*)\n +\]",
+)
+
+
+def compact_short_lists(text: str) -> str:
+    """Keep short string arrays (hosts, env) on one line — matches catalog SSOT."""
+
+    def repl(match: re.Match[str]) -> str:
+        items = re.findall(r"\"[^\"]*\"", match.group(2))
+        joined = ", ".join(items)
+        if len(items) > 4 or len(joined) > 100:
+            return match.group(0)
+        return "[" + joined + "]"
+
+    return _SHORT_LIST.sub(repl, text)
+
+
 def dump_json(path: Path, data: dict[str, Any]) -> None:
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    text = compact_short_lists(json.dumps(data, indent=2, ensure_ascii=False))
+    path.write_text(text + "\n", encoding="utf-8")
 
 
 def update_catalog_file(path: Path, pins: dict, browsers: set[str]) -> bool:
@@ -233,7 +252,6 @@ def patch_browser_versions_md(path: Path, old_pins: dict, new_pins: dict, browse
         new = new.replace(f"`qaguru/webdriver-chrome:{o}`", f"`qaguru/webdriver-chrome:{n}`")
         new = new.replace(f":{o}-min", f":{n}-min")
         new = new.replace(f"chrome {o}.0-min", f"chrome {n}.0-min")
-        new = new.replace(f"| `chrome` | `{o}.0` |", f"| `chrome` | `{n}.0` |")
         new = new.replace(f"| Selenium Chrome | `chrome` | `{o}.0` |", f"| Selenium Chrome | `chrome` | `{n}.0` |")
     if "firefox" in browsers:
         o, n = int(old_pins["firefox"]["default_major"]), int(new_pins["firefox"]["default_major"])
@@ -329,6 +347,18 @@ def cmd_self_check() -> int:
     check("pw default", catalog["playwright-chromium"]["default"] == "1.63.0")
     check("pw min", "1.63.0-min" in catalog["playwright-chromium"]["versions"])
     check("pw dropped 1.61.1", "1.61.1" not in catalog["playwright-chromium"]["versions"])
+    dumped = compact_short_lists(
+        json.dumps(
+            {
+                "hosts": ["host.docker.internal:host-gateway"],
+                "env": ["SCREEN_RESOLUTION=2100x2100x24"],
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
+    check("hosts compact", '"hosts": ["host.docker.internal:host-gateway"]' in dumped)
+    check("env compact", '"env": ["SCREEN_RESOLUTION=2100x2100x24"]' in dumped)
     return 1 if failures else 0
 
 

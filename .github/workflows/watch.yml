@@ -1,6 +1,8 @@
 # Watch upstream stables → pin → tag → Hub 200 → catalog → selenoid.qa.guru.
 # Cron every 15 min. Does not wait for selenoid-tests publish-smoke.
-# Hub/UI image versions are never sent in deploy payload (empty version/ui_version).
+# Never pass version/ui_version into deploy-selenoid (omit keys — keep hub/UI pins).
+# Majors: catalog_sync.sh pushes browsers-production.json last (deploy.yml).
+# Patches: pull-prod below (pull_browsers=always only). Tag publish does not dispatch.
 #
 # Tag push must use a PAT (SELENOID_TESTS_DISPATCH_TOKEN). GITHUB_TOKEN tag
 # pushes do not trigger publish-webdriver / publish.
@@ -219,5 +221,6 @@ jobs:
     secrets:
       SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
     with:
+      # Do not set version / ui_version — empty keys rewind hub/UI pins.
       pull_browsers: always
       skip_inline_browser_smoke: true

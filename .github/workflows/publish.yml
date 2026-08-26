@@ -164,7 +164,9 @@ jobs:
   promote-prod:
     name: Pull browsers on prod → selenoid.qa.guru
     needs: docker
-    if: success()
+    # Tag publishes are owned by watch.yml (Hub 200 → catalog / pull-prod).
+    # workflow_dispatch keeps a manual pull without waiting for cron.
+    if: success() && github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     uses: ./.github/workflows/deploy-prod-dispatch.yml

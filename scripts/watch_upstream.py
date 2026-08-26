@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from pin_get import DEFAULT_PINS, REPO_ROOT, load_pins, save_pins
+from pin_get import DEFAULT_PINS, load_pins, save_pins
 
 UA = "qaguru-browser-watch/1.0"
 CFT_LKG = "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
