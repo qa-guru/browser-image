@@ -106,9 +106,19 @@ push_browser_all() {
   local variant="$2"
   source_browser_versions "${browser}"
   local list_fn="list_${browser}_majors"
+  if ! declare -F "${list_fn}" >/dev/null; then
+    echo "missing ${list_fn} (browser=${browser})" >&2
+    return 1
+  fi
+  local majors
+  majors="$("${list_fn}")"
+  if [[ -z "${majors}" ]]; then
+    echo "empty ${list_fn}" >&2
+    return 1
+  fi
   while IFS= read -r major; do
     push_one "${browser}" "${major}" "${variant}"
-  done < <("${list_fn}")
+  done <<< "${majors}"
 }
 
 case "${BROWSER}" in

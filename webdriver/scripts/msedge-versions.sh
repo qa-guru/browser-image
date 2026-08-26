@@ -80,3 +80,8 @@ resolve_dockerfile() {
 list_edge_majors() {
   printf '%s\n' "${EDGE_MAJORS[@]}"
 }
+
+# push.sh / build.sh call list_${browser}_majors → list_msedge_majors
+list_msedge_majors() {
+  list_edge_majors
+}
