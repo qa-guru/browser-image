@@ -98,9 +98,10 @@ async function fillBlank(page) {
 
 /** Keep the setContent window; Firefox also maps an about:blank "Problem loading page". */
 function closeExtraFullscreenWindows() {
+  const wmctrl = "/usr/bin/wmctrl";
   let out = "";
   try {
-    out = execFileSync("wmctrl", ["-l", "-G"], { encoding: "utf8" });
+    out = execFileSync(wmctrl, ["-l", "-G"], { encoding: "utf8" });
   } catch {
     return;
   }
@@ -123,7 +124,7 @@ function closeExtraFullscreenWindows() {
   }
   for (const id of drop) {
     try {
-      execFileSync("wmctrl", ["-i", "-c", id]);
+      execFileSync(wmctrl, ["-i", "-c", id]);
     } catch {
       // ignore
     }
