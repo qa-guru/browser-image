@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BROWSER="${1:-}"
-VERSION="${2:-1.61.1}"
+VERSION="${2:-1.62.1}"
 VARIANT="${3:-}"
 
 if [[ -z "${BROWSER}" ]]; then

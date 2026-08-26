@@ -116,13 +116,13 @@ Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-im
 
 ```bash
 # Playwright
-./playwright/scripts/build.sh chromium 1.61.1
-./playwright/scripts/build.sh chromium 1.61.1 min
+./playwright/scripts/build.sh chromium 1.62.1
+./playwright/scripts/build.sh chromium 1.62.1 min
 
 # WebDriver (chrome, firefox, msedge)
-./webdriver/scripts/build.sh chrome 149 warm
-./webdriver/scripts/build.sh firefox 151 both
-./webdriver/scripts/build.sh msedge 145 min
+./webdriver/scripts/build.sh chrome 152 warm
+./webdriver/scripts/build.sh firefox 154 both
+./webdriver/scripts/build.sh msedge 151 min
 
 # Video recorder (Selenoid sidecar)
 ./video-recorder/scripts/build.sh
@@ -134,10 +134,10 @@ Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-im
 
 | Стек | Git tag | Docker |
 |------|---------|--------|
-| Playwright | `playwright/1.61.1` | `qaguru/playwright-chromium:1.61.1` |
-| Playwright min | `playwright/1.61.1-min` | `qaguru/playwright-chromium:1.61.1-min` |
-| WebDriver warm | `webdriver/chrome-149` · `webdriver/firefox-151` · `webdriver/msedge-145` | `qaguru/webdriver-*` |
-| WebDriver min | `webdriver/chrome-149-min` · `webdriver/firefox-151-min` · `webdriver/msedge-145-min` | `qaguru/webdriver-*:-min` |
+| Playwright | `playwright/1.62.1` | `qaguru/playwright-chromium:1.62.1` |
+| Playwright min | `playwright/1.62.1-min` | `qaguru/playwright-chromium:1.62.1-min` |
+| WebDriver warm | `webdriver/chrome-152` · `webdriver/firefox-154` · `webdriver/msedge-151` | `qaguru/webdriver-*` |
+| WebDriver min | `webdriver/chrome-152-min` · `webdriver/firefox-154-min` · `webdriver/msedge-151-min` | `qaguru/webdriver-*:-min` |
 | Video recorder | `video-recorder/1.0.0` | `qaguru/video-recorder:1.0.0` · `:latest` |
 
 Публикация — `playwright/README.md`, `webdriver/README.md`. CI: `.github/workflows/`.

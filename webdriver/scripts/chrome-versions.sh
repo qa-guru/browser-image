@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Canonical Chrome for Testing versions for webdriver-chrome*-min.
-# Primary input: Chrome major (148, 149). PW semver below is legacy alias only.
+# Canonical Chrome for Testing versions for webdriver-chrome (warm + min).
+# Primary input: Chrome major (152, 151). PW semver below is legacy alias only.
 
-CHROME_MAJORS=(149 148)
+CHROME_MAJORS=(152 151)
 
 chrome_cft_version_for_major() {
   case "$1" in
+    152) printf '%s' "152.0.7977.64" ;;
+    151) printf '%s' "151.0.7922.138" ;;
     149) printf '%s' "149.0.7827.55" ;;
     148) printf '%s' "148.0.7778.96" ;;
     *)
@@ -23,8 +25,11 @@ normalize_chrome_version() {
   version="${version%-min}"
 
   case "${version}" in
+    1.62.1|1.62.0) printf '%s' "151" ;;
     1.61.1) printf '%s' "149" ;;
     1.60.0) printf '%s' "148" ;;
+    152|152.0) printf '%s' "152" ;;
+    151|151.0) printf '%s' "151" ;;
     149|149.0) printf '%s' "149" ;;
     148|148.0) printf '%s' "148" ;;
     *.*.*.*)

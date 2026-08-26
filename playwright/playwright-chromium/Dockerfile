@@ -1,4 +1,4 @@
-ARG PLAYWRIGHT_VERSION=1.61.1
+ARG PLAYWRIGHT_VERSION=1.62.1
 
 # Static CDP proxy for container port 7070 (hub-HAR / se:cdp / /devtools/<id>/).
 # Cross-compiled on the build host for the target arch (amd64 + arm64), no CGO.

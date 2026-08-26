@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Playwright image tag, e.g. 1.61.1"
+        description: "Playwright image tag, e.g. 1.62.1"
         required: true
-        default: "1.61.1"
+        default: "1.62.1"
       variant:
         description: "full (all browsers + chromium-min) or min (chromium-min only)"
         type: choice

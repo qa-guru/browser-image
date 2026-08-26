@@ -1,4 +1,4 @@
-ARG PLAYWRIGHT_VERSION=1.61.1
+ARG PLAYWRIGHT_VERSION=1.62.1
 
 # Static CDP proxy for container port 7070 (hub-HAR / se:cdp / /devtools/<id>/).
 FROM --platform=$BUILDPLATFORM golang:1.26.5-bookworm AS devtools-proxy

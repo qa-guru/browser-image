@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPTS="${ROOT}/scripts"
 BROWSER="${1:-chrome}"
-VERSION="${2:-149}"
+VERSION="${2:-152}"
 VARIANT="${3:-warm}"
 
 source_browser_versions() {
