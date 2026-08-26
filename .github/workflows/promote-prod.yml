@@ -1,0 +1,30 @@
+# Manual / retry: pull current browsers-production.json images onto Box1.
+# Automatic path: publish.yml / publish-webdriver.yml call deploy-prod-dispatch after docker.
+
+name: promote-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      pull_browsers:
+        description: "never | auto | always — browser docker pull on Box1"
+        required: false
+        default: always
+        type: choice
+        options:
+          - always
+          - auto
+          - never
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    name: Pull browsers on prod → selenoid.qa.guru
+    uses: ./.github/workflows/deploy-prod-dispatch.yml
+    secrets:
+      SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+    with:
+      pull_browsers: ${{ inputs.pull_browsers }}
+      skip_inline_browser_smoke: true

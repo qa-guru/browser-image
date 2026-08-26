@@ -159,3 +159,16 @@ jobs:
       source_version: ${{ needs.smoke-meta.outputs.version }}
       source_ref: ${{ github.ref }}
       summary_title: Publish smoke → selenoid-tests (webdriver)
+
+  promote-prod:
+    name: Pull browsers on prod → selenoid.qa.guru
+    needs: docker
+    if: success()
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy-prod-dispatch.yml
+    secrets:
+      SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+    with:
+      pull_browsers: always
+      skip_inline_browser_smoke: true
