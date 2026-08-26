@@ -72,7 +72,7 @@ start_window_fitter() {
   h="${h%%x*}"
   (
     set +e
-    for ((i = 0; i < 40; i++)); do
+    for ((i = 0; i < 80; i++)); do
       while read -r id; do
         [ -n "${id}" ] || continue
         wmctrl -i -r "${id}" -b add,maximized_vert,maximized_horz >/dev/null 2>&1

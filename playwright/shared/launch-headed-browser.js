@@ -1,4 +1,5 @@
 const http = require("node:http");
+const { execFileSync } = require("node:child_process");
 const { chromium, firefox, webkit } = require("playwright-core");
 const { screenSizeFromEnv } = require("./screen-resolution.cjs");
 const { playwrightWsEndpoint } = require("./headed-window.cjs");
@@ -65,7 +66,6 @@ async function fitWindowToScreen(page) {
       }
       return;
     }
-    // Do not setViewportSize: it fights WM maximize (window chrome vs Xvfb).
     await page.evaluate(({ width, height }) => {
       window.moveTo(0, 0);
       window.resizeTo(width, height);
@@ -75,14 +75,69 @@ async function fitWindowToScreen(page) {
   }
 }
 
+async function firstOrNewPage(browser) {
+  const pages = browser.contexts().flatMap((ctx) => ctx.pages());
+  const page = pages[0] || (await browser.newPage({ viewport: null }));
+  for (const extra of pages.slice(1)) {
+    await extra.close().catch(() => {});
+  }
+  return page;
+}
+
+/** Firefox Nightly titles about:blank as "Problem loading page". */
+async function fillBlank(page) {
+  try {
+    await page.setContent("<!DOCTYPE html><html><head><title>Playwright</title></head><body></body></html>", {
+      waitUntil: "domcontentloaded",
+      timeout: 5000,
+    });
+  } catch (err) {
+    console.error("fillBlank:", err.message || err);
+  }
+}
+
+/** Keep the setContent window; Firefox also maps an about:blank "Problem loading page". */
+function closeExtraFullscreenWindows() {
+  let out = "";
+  try {
+    out = execFileSync("wmctrl", ["-l", "-G"], { encoding: "utf8" });
+  } catch {
+    return;
+  }
+  const keep = [];
+  const drop = [];
+  for (const line of out.trim().split("\n")) {
+    if (!line) continue;
+    const parts = line.split(/\s+/);
+    if (parts.length < 7) continue;
+    const id = parts[0];
+    const width = Number(parts[4]);
+    const height = Number(parts[5]);
+    const title = parts.slice(7).join(" ").trim();
+    if (!(width >= 800 && height >= 600)) continue;
+    if (/playwright/i.test(title) && !/problem loading/i.test(title)) keep.push(id);
+    else drop.push(id);
+  }
+  if (keep.length === 0) {
+    return;
+  }
+  for (const id of drop) {
+    try {
+      execFileSync("wmctrl", ["-i", "-c", id]);
+    } catch {
+      // ignore
+    }
+  }
+}
+
 (async () => {
   await waitForServer();
-  // Same browser as launchServer — a second launch() stacked a small Firefox/WebKit
-  // window on top of the server process (VNC showed the nested frame).
   const browser = await browserType.connect(wsEndpoint);
-  const page = await browser.newPage({ viewport: null });
-  await page.goto("about:blank");
+  const page = await firstOrNewPage(browser);
+  await fillBlank(page);
   await fitWindowToScreen(page);
+  closeExtraFullscreenWindows();
+  console.error("headed manual page ready");
   await new Promise(() => {});
 })().catch((err) => {
   console.error("Failed to launch headed browser for VNC:", err.message || err);

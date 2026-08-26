@@ -56,14 +56,27 @@ for image in "${images[@]}"; do
 
   geo="$(docker exec "${name}" sh -c 'wmctrl -l -G 2>/dev/null || true')"
   echo "${geo:-"(no wmctrl windows)"}"
+  if printf '%s\n' "${geo}" | grep -Eiq 'xmessage|fbsetbg|Eterm|Problem loading'; then
+    echo "FAIL ${image}: error/wallpaper dialog on VNC"
+    fail=1
+  fi
+  large_n="$(printf '%s\n' "${geo}" | awk -v minw="${MIN_W}" -v minh="${MIN_H}" '
+    tolower($0) ~ /xmessage|fbsetbg/ {next}
+    NF>=6 && $5+0>=minw && $6+0>=minh {n++}
+    END {print n+0}
+  ')"
   max_wh="$(printf '%s\n' "${geo}" | awk 'tolower($0) ~ /xmessage|fbsetbg/ {next} NF>=6 {print $5+0, $6+0}' | awk '$1*$2>m{m=$1*$2; w=$1; h=$2} END{if(w) print w,h}')"
   read -r gw gh <<<"${max_wh:-0 0}"
   if [[ "${gw}" -lt "${MIN_W}" || "${gh}" -lt "${MIN_H}" ]]; then
     echo "FAIL ${image}: largest window ${gw}x${gh} < ${MIN_W}x${MIN_H}"
     docker exec "${name}" sh -c 'cat /tmp/headed-launch.log /tmp/fluxbox.log 2>/dev/null | tail -40' || true
     fail=1
+  elif [[ "${large_n}" -ne 1 ]]; then
+    echo "FAIL ${image}: expected 1 fullscreen window, got ${large_n}"
+    docker exec "${name}" sh -c 'cat /tmp/headed-launch.log 2>/dev/null | tail -20' || true
+    fail=1
   else
-    echo "OK ${image}: ${gw}x${gh}"
+    echo "OK ${image}: ${gw}x${gh} (1 window)"
   fi
   docker rm -f "${name}" >/dev/null
 done

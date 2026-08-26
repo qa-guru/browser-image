@@ -77,6 +77,15 @@ if (launchArgs.length > 0) {
   launchOptions.args = launchArgs;
 }
 
+if (browserTypeName === "firefox") {
+  launchOptions.firefoxUserPrefs = {
+    "browser.startup.page": 0,
+    "browser.startup.homepage": "about:blank",
+    "startup.homepage_welcome_url": "",
+    "startup.homepage_welcome_url.additional": "",
+  };
+}
+
 const channel = env("PW_BROWSER_CHANNEL");
 if (channel) {
   launchOptions.channel = channel;
