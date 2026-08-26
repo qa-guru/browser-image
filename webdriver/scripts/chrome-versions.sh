@@ -2,14 +2,26 @@
 set -euo pipefail
 
 # Canonical Chrome for Testing versions for webdriver-chrome (warm + min).
-# Primary input: Chrome major (152, 151). PW semver below is legacy alias only.
+# SSOT: pins.json (watch.yml). Legacy majors below stay for local CLI builds.
 
-CHROME_MAJORS=(152 151)
+_WEBDRIVER_SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_REPO_ROOT="$(cd "${_WEBDRIVER_SCRIPTS}/../.." && pwd)"
+_PINS="${_REPO_ROOT}/pins.json"
+_PIN_GET="${_REPO_ROOT}/scripts/pin_get.py"
+
+_pin() {
+  python3 "${_PIN_GET}" "${_PINS}" "$1"
+}
+
+CHROME_MAJORS=("$(_pin chrome.default_major)" "$(_pin chrome.regression_major)")
 
 chrome_cft_version_for_major() {
+  local pinned
+  if pinned="$(_pin "chrome.versions.$1" 2>/dev/null)"; then
+    printf '%s' "${pinned}"
+    return 0
+  fi
   case "$1" in
-    152) printf '%s' "152.0.7977.64" ;;
-    151) printf '%s' "151.0.7922.138" ;;
     149) printf '%s' "149.0.7827.55" ;;
     148) printf '%s' "148.0.7778.96" ;;
     *)
@@ -28,11 +40,10 @@ normalize_chrome_version() {
     1.62.1|1.62.0) printf '%s' "151" ;;
     1.61.1) printf '%s' "149" ;;
     1.60.0) printf '%s' "148" ;;
-    152|152.0) printf '%s' "152" ;;
-    151|151.0) printf '%s' "151" ;;
-    149|149.0) printf '%s' "149" ;;
-    148|148.0) printf '%s' "148" ;;
     *.*.*.*)
+      printf '%s' "${version%%.*}"
+      ;;
+    *.*)
       printf '%s' "${version%%.*}"
       ;;
     *)

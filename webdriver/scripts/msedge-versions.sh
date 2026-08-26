@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-EDGE_MAJORS=(151 150)
-EDGEDRIVER_VERSION="151.0.4129.107"
+_WEBDRIVER_SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_REPO_ROOT="$(cd "${_WEBDRIVER_SCRIPTS}/../.." && pwd)"
+_PINS="${_REPO_ROOT}/pins.json"
+_PIN_GET="${_REPO_ROOT}/scripts/pin_get.py"
+
+_pin() {
+  python3 "${_PIN_GET}" "${_PINS}" "$1"
+}
+
+EDGE_MAJORS=("$(_pin msedge.default_major)" "$(_pin msedge.regression_major)")
+_EDGE_DEFAULT="$(_pin msedge.default_major)"
+EDGEDRIVER_VERSION="$(_pin "msedge.versions.${_EDGE_DEFAULT}")"
 
 edge_version_for_major() {
+  local pinned
+  if pinned="$(_pin "msedge.versions.$1" 2>/dev/null)"; then
+    printf '%s' "${pinned}"
+    return 0
+  fi
   case "$1" in
-    151) printf '%s' "151.0.4129.107" ;;
-    150) printf '%s' "150.0.4078.96" ;;
     145) printf '%s' "145.0.3800.97" ;;
     144) printf '%s' "144.0.3719.82" ;;
     *)
@@ -18,9 +31,12 @@ edge_version_for_major() {
 }
 
 edge_deb_version_for_major() {
+  local pinned
+  if pinned="$(_pin "msedge.deb_versions.$1" 2>/dev/null)"; then
+    printf '%s' "${pinned}"
+    return 0
+  fi
   case "$1" in
-    151) printf '%s' "151.0.4129.107-1" ;;
-    150) printf '%s' "150.0.4078.96-1" ;;
     145) printf '%s' "145.0.3800.97-1" ;;
     144) printf '%s' "144.0.3719.82-1" ;;
     *) edge_version_for_major "$1" | sed 's/$/-1/' ;;
@@ -31,10 +47,6 @@ normalize_edge_version() {
   local version="${1#v}"
   version="${version%-min}"
   case "${version}" in
-    151|151.0) printf '%s' "151" ;;
-    150|150.0) printf '%s' "150" ;;
-    145|145.0) printf '%s' "145" ;;
-    144|144.0) printf '%s' "144" ;;
     *.*) printf '%s' "${version%%.*}" ;;
     *) printf '%s' "${version}" ;;
   esac

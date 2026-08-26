@@ -1,0 +1,36 @@
+{
+  "chrome": {
+    "default_major": 152,
+    "regression_major": 151,
+    "versions": {
+      "152": "152.0.7977.64",
+      "151": "151.0.7922.138"
+    }
+  },
+  "firefox": {
+    "default_major": 154,
+    "regression_major": 153,
+    "geckodriver": "0.37.1",
+    "versions": {
+      "154": "154.0.1",
+      "153": "153.0.1"
+    }
+  },
+  "msedge": {
+    "default_major": 151,
+    "regression_major": 150,
+    "versions": {
+      "151": "151.0.4129.107",
+      "150": "150.0.4078.96"
+    },
+    "deb_versions": {
+      "151": "151.0.4129.107-1",
+      "150": "150.0.4078.96-1"
+    }
+  },
+  "playwright": {
+    "default": "1.62.1",
+    "regression": "1.61.1",
+    "mcr_distro": "noble"
+  }
+}

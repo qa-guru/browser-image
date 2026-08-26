@@ -3,9 +3,17 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPTS="${ROOT}/scripts"
+REPO_ROOT="$(cd "${ROOT}/.." && pwd)"
 BROWSER="${1:-chrome}"
-VERSION="${2:-152}"
+VERSION="${2:-}"
 VARIANT="${3:-warm}"
+if [[ -z "${VERSION}" ]]; then
+  if [[ "${BROWSER}" == "all" ]]; then
+    VERSION="all"
+  else
+    VERSION="$(python3 "${REPO_ROOT}/scripts/pin_get.py" "${REPO_ROOT}/pins.json" "${BROWSER}.default_major")"
+  fi
+fi
 
 source_browser_versions() {
   local browser="$1"
@@ -123,7 +131,11 @@ push_browser_all() {
 
 case "${BROWSER}" in
   chrome|firefox|msedge)
-    push_one "${BROWSER}" "${VERSION}" "${VARIANT}"
+    if [[ "${VERSION}" == "all" ]]; then
+      push_browser_all "${BROWSER}" "${VARIANT}"
+    else
+      push_one "${BROWSER}" "${VERSION}" "${VARIANT}"
+    fi
     ;;
   all)
     for b in chrome firefox msedge; do

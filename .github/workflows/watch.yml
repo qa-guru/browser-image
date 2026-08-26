@@ -1,0 +1,223 @@
+# Watch upstream stables → pin → tag → Hub 200 → catalog → selenoid.qa.guru.
+# Cron every 15 min. Does not wait for selenoid-tests publish-smoke.
+# Hub/UI image versions are never sent in deploy payload (empty version/ui_version).
+#
+# Tag push must use a PAT (SELENOID_TESTS_DISPATCH_TOKEN). GITHUB_TOKEN tag
+# pushes do not trigger publish-webdriver / publish.
+
+name: watch
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Resolve only — no pin commit, tags, or catalog"
+        type: boolean
+        default: true
+      browser:
+        description: "Limit resolve to one family"
+        type: choice
+        options:
+          - all
+          - chrome
+          - firefox
+          - msedge
+          - playwright
+        default: all
+      sync_catalog:
+        description: "Force catalog rewrite from current pins (retry after Hub)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: browser-image-watch
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    outputs:
+      noop: ${{ steps.flags.outputs.noop }}
+      need_pull: ${{ steps.flags.outputs.need_pull }}
+      need_catalog: ${{ steps.flags.outputs.need_catalog }}
+    steps:
+      - name: Validate token
+        env:
+          TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+        run: |
+          if [[ -z "${TOKEN}" ]]; then
+            echo "::error::Missing SELENOID_TESTS_DISPATCH_TOKEN (contents:write on browser-image + catalog repos, repo on selenoid.qa.guru)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+
+      - name: Self-check
+        run: |
+          python3 scripts/watch_upstream.py self-check
+          python3 scripts/update_catalog.py --self-check
+
+      - name: Resolve upstream
+        id: resolve
+        env:
+          BROWSER: ${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'all' }}
+        run: |
+          set -euo pipefail
+          python3 scripts/watch_upstream.py resolve --json --browser "${BROWSER}" | tee plan.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          plan = json.load(open("plan.json", encoding="utf-8"))
+          print(f"noop={'true' if plan.get('noop') else 'false'}")
+          print(f"need_publish={'true' if plan.get('need_publish') else 'false'}")
+          print(f"need_catalog={'true' if plan.get('need_catalog') else 'false'}")
+          print(f"need_pull={'true' if plan.get('need_pull') else 'false'}")
+          print(f"errors={len(plan.get('errors') or [])}")
+          PY
+
+      - name: Job summary (resolve)
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          p = pathlib.Path("plan.json")
+          print("## Watch upstream")
+          print("")
+          if not p.is_file():
+              print("plan.json missing")
+              raise SystemExit(0)
+          plan = json.loads(p.read_text(encoding="utf-8"))
+          print(f"- noop: `{plan.get('noop')}`")
+          print(f"- need_publish: `{plan.get('need_publish')}`")
+          print(f"- need_catalog: `{plan.get('need_catalog')}`")
+          print(f"- need_pull (rebuild, no catalog push): `{plan.get('need_pull')}`")
+          for err in plan.get("errors") or []:
+              print(f"- error: {err}")
+          for c in plan.get("changes") or []:
+              print(f"- {c['browser']}: `{c.get('kind')}` tags `{', '.join(c.get('tags') or [])}` catalog=`{c.get('catalog')}`")
+          if plan.get("noop"):
+              print("")
+              print("pins already match upstream stables — nothing to publish.")
+          PY
+
+      - name: Fail on resolve errors without a publish plan
+        if: steps.resolve.outputs.errors != '0' && steps.resolve.outputs.need_publish != 'true'
+        run: |
+          echo "::error::Upstream resolve errors and nothing to publish"
+          exit 1
+
+      - name: Maybe force catalog plan
+        id: force
+        if: github.event_name == 'workflow_dispatch' && inputs.sync_catalog && steps.resolve.outputs.need_publish != 'true'
+        run: |
+          python3 scripts/watch_upstream.py force-catalog-plan | tee plan.json
+          echo "need_catalog=true" >> "$GITHUB_OUTPUT"
+
+      - name: Flags
+        id: flags
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          plan = json.load(open("plan.json", encoding="utf-8"))
+          dry = os.environ.get("DRY_RUN", "").lower() in ("true", "1")
+          need_pull = bool(plan.get("need_pull")) and not dry
+          print(f"noop={'true' if plan.get('noop') else 'false'}")
+          print(f"need_publish={'true' if plan.get('need_publish') else 'false'}")
+          print(f"need_catalog={'true' if plan.get('need_catalog') else 'false'}")
+          print(f"need_pull={'true' if need_pull else 'false'}")
+          PY
+
+      - name: Dry-run stop
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run && steps.flags.outputs.need_catalog != 'true'
+        run: echo "dry_run — skip pin/tag/catalog"
+
+      - name: Apply pins
+        if: steps.flags.outputs.need_publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
+        run: python3 scripts/watch_upstream.py apply-pins --plan plan.json
+
+      - name: Commit pins
+        if: steps.flags.outputs.need_publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pins.json
+          if git diff --cached --quiet; then
+            echo "pins.json unchanged"
+            exit 0
+          fi
+          msg="$(python3 - <<'PY'
+          import json
+          plan = json.load(open("plan.json", encoding="utf-8"))
+          bits = []
+          for c in plan.get("changes") or []:
+              b = c["browser"]
+              if b == "playwright":
+                  bits.append(f"playwright {c['new']['version']}")
+              elif c.get("kind") == "patch":
+                  bits.append(f"{b} {c['new']['version']}")
+              else:
+                  bits.append(f"{b} {c['new']['major']}")
+          print("chore(pins): " + ", ".join(bits))
+          PY
+          )"
+          git commit -m "${msg}"
+          git push origin HEAD
+
+      - name: Snapshot Hub tags (rebuild detection)
+        if: steps.flags.outputs.need_publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
+        run: python3 scripts/watch_upstream.py snapshot-hub --plan plan.json | tee hub-snapshot.json
+
+      - name: Push tags one-by-one
+        if: steps.flags.outputs.need_publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
+        env:
+          WATCH_TAG_SLEEP: "3"
+        run: |
+          git fetch --tags origin
+          python3 scripts/watch_upstream.py tags --plan plan.json | bash scripts/push_watch_tags.sh
+
+      - name: Wait Docker Hub 200
+        if: steps.flags.outputs.need_publish == 'true' && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false)
+        run: python3 scripts/watch_upstream.py wait-hub --plan plan.json --snapshot hub-snapshot.json --timeout 2700 --interval 20
+
+      - name: Sync catalog (prod last)
+        if: steps.flags.outputs.need_catalog == 'true' && (github.event_name != 'workflow_dispatch' || inputs.dry_run == false || inputs.sync_catalog)
+        env:
+          CATALOG_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash scripts/catalog_sync.sh plan.json
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: watch-plan
+          path: |
+            plan.json
+            hub-snapshot.json
+          if-no-files-found: ignore
+
+  pull-prod:
+    name: Pull rebuilt tags on prod (no catalog change)
+    needs: watch
+    if: needs.watch.outputs.need_pull == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy-prod-dispatch.yml
+    secrets:
+      SELENOID_TESTS_DISPATCH_TOKEN: ${{ secrets.SELENOID_TESTS_DISPATCH_TOKEN }}
+    with:
+      pull_browsers: always
+      skip_inline_browser_smoke: true

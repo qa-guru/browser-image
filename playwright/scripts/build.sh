@@ -2,9 +2,13 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "${ROOT}/.." && pwd)"
 BROWSER="${1:-}"
-VERSION="${2:-1.62.1}"
+VERSION="${2:-}"
 VARIANT="${3:-}"
+if [[ -z "${VERSION}" ]]; then
+  VERSION="$(python3 "${REPO_ROOT}/scripts/pin_get.py" "${REPO_ROOT}/pins.json" playwright.default)"
+fi
 
 if [[ -z "${BROWSER}" ]]; then
   echo "Usage: $0 <browser> [version-tag] [variant]" >&2

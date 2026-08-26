@@ -1,13 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FIREFOX_MAJORS=(154 153)
-GECKODRIVER_VERSION="0.37.1"
+_WEBDRIVER_SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_REPO_ROOT="$(cd "${_WEBDRIVER_SCRIPTS}/../.." && pwd)"
+_PINS="${_REPO_ROOT}/pins.json"
+_PIN_GET="${_REPO_ROOT}/scripts/pin_get.py"
+
+_pin() {
+  python3 "${_PIN_GET}" "${_PINS}" "$1"
+}
+
+FIREFOX_MAJORS=("$(_pin firefox.default_major)" "$(_pin firefox.regression_major)")
+GECKODRIVER_VERSION="$(_pin firefox.geckodriver)"
 
 firefox_version_for_major() {
+  local pinned
+  if pinned="$(_pin "firefox.versions.$1" 2>/dev/null)"; then
+    printf '%s' "${pinned}"
+    return 0
+  fi
   case "$1" in
-    154) printf '%s' "154.0.1" ;;
-    153) printf '%s' "153.0.1" ;;
     151) printf '%s' "151.0" ;;
     150) printf '%s' "150.0" ;;
     *)
@@ -21,10 +33,6 @@ normalize_firefox_version() {
   local version="${1#v}"
   version="${version%-min}"
   case "${version}" in
-    154|154.0|154.0.1) printf '%s' "154" ;;
-    153|153.0|153.0.1) printf '%s' "153" ;;
-    151|151.0) printf '%s' "151" ;;
-    150|150.0) printf '%s' "150" ;;
     *.*) printf '%s' "${version%%.*}" ;;
     *) printf '%s' "${version}" ;;
   esac

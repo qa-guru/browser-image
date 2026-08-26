@@ -141,3 +141,16 @@ Ethalon: `generators/ethalon/readme/blocks/webdriver-image.md` · `playwright-im
 | Video recorder | `video-recorder/1.0.0` | `qaguru/video-recorder:1.0.0` · `:latest` |
 
 Публикация — `playwright/README.md`, `webdriver/README.md`. CI: `.github/workflows/`.
+
+## Watch → prod (без кнопки)
+
+Пины — [`pins.json`](pins.json). Cron `watch.yml` каждые 15 мин (и `workflow_dispatch`):
+
+1. Резолв latest **stable** (CfT last-known-good, Firefox product-details + FTP, Edge apt amd64, npm `@playwright/test` + MCR `vX-noble`).
+2. No-op, если окно default+regression уже совпадает.
+3. Commit `pins.json` → git-теги **по одному** (`webdriver/chrome-N`, `…-min`, `playwright/x.y.z`) → Docker Hub 200.
+4. SSOT-каталог в nested-репах, **последним** `deploy/browsers-production.json` на [selenoid.qa.guru](https://github.com/qa-guru/selenoid.qa.guru) (сам деплоит Box1, `pull_browsers=always`). Hub/UI теги не трогает.
+
+Локально: `python3 scripts/watch_upstream.py self-check && python3 scripts/watch_upstream.py resolve`.
+
+Секрет: `SELENOID_TESTS_DISPATCH_TOKEN` — PAT `contents:write` на `browser-image` + catalog-репы и `repo` на `selenoid.qa.guru` (теги с `GITHUB_TOKEN` не стартуют Actions).
