@@ -234,49 +234,54 @@ def patch_properties(tests_root: Path, old_pins: dict, new_pins: dict, browsers:
     return changed
 
 
+def _replace_wd_docs(
+    text: str,
+    name: str,
+    old_pins: dict,
+    new_pins: dict,
+    *,
+    title: str,
+    selenium: str,
+    image: str,
+) -> str:
+    o = int(old_pins[name]["default_major"])
+    n = int(new_pins[name]["default_major"])
+    r_old = int(old_pins[name]["regression_major"])
+    r_new = int(new_pins[name]["regression_major"])
+    pairs = (
+        (f"{o}.0, {o}.0-min, {r_old}.0, {r_old}.0-min", f"{n}.0, {n}.0-min, {r_new}.0, {r_new}.0-min"),
+        (f"| `{name}` | `{o}.0` |", f"| `{name}` | `{n}.0` |"),
+        (f"**{name} {o}.0**", f"**{name} {n}.0**"),
+        (f"`qaguru/{image}:{o}`", f"`qaguru/{image}:{n}`"),
+        (f"| {selenium} | `{name}` | `{o}.0` |", f"| {selenium} | `{name}` | `{n}.0` |"),
+        (f"{title} **{o}.0**", f"{title} **{n}.0**"),
+    )
+    if name == "chrome":
+        pairs = pairs + (
+            (f"Chrome default **{o}.0**", f"Chrome default **{n}.0**"),
+            (f":{o}-min", f":{n}-min"),
+            (f"chrome {o}.0-min", f"chrome {n}.0-min"),
+        )
+    for old, repl in pairs:
+        text = text.replace(old, repl)
+    return text
+
+
 def patch_browser_versions_md(path: Path, old_pins: dict, new_pins: dict, browsers: set[str]) -> bool:
     if not path.is_file():
         return False
     text = path.read_text(encoding="utf-8")
     new = text
-    if "chrome" in browsers:
-        o, n = int(old_pins["chrome"]["default_major"]), int(new_pins["chrome"]["default_major"])
-        r_old, r_new = int(old_pins["chrome"]["regression_major"]), int(new_pins["chrome"]["regression_major"])
-        new = new.replace(
-            f"{o}.0, {o}.0-min, {r_old}.0, {r_old}.0-min",
-            f"{n}.0, {n}.0-min, {r_new}.0, {r_new}.0-min",
-        )
-        new = new.replace(f"Chrome default **{o}.0**", f"Chrome default **{n}.0**")
-        new = new.replace(f"| `chrome` | `{o}.0` |", f"| `chrome` | `{n}.0` |")
-        new = new.replace(f"**chrome {o}.0**", f"**chrome {n}.0**")
-        new = new.replace(f"`qaguru/webdriver-chrome:{o}`", f"`qaguru/webdriver-chrome:{n}`")
-        new = new.replace(f":{o}-min", f":{n}-min")
-        new = new.replace(f"chrome {o}.0-min", f"chrome {n}.0-min")
-        new = new.replace(f"| Selenium Chrome | `chrome` | `{o}.0` |", f"| Selenium Chrome | `chrome` | `{n}.0` |")
-    if "firefox" in browsers:
-        o, n = int(old_pins["firefox"]["default_major"]), int(new_pins["firefox"]["default_major"])
-        r_old, r_new = int(old_pins["firefox"]["regression_major"]), int(new_pins["firefox"]["regression_major"])
-        new = new.replace(
-            f"{o}.0, {o}.0-min, {r_old}.0, {r_old}.0-min",
-            f"{n}.0, {n}.0-min, {r_new}.0, {r_new}.0-min",
-        )
-        new = new.replace(f"Firefox **{o}.0**", f"Firefox **{n}.0**")
-        new = new.replace(f"| `firefox` | `{o}.0` |", f"| `firefox` | `{n}.0` |")
-        new = new.replace(f"**firefox {o}.0**", f"**firefox {n}.0**")
-        new = new.replace(f"`qaguru/webdriver-firefox:{o}`", f"`qaguru/webdriver-firefox:{n}`")
-        new = new.replace(f"| Selenium Firefox | `firefox` | `{o}.0` |", f"| Selenium Firefox | `firefox` | `{n}.0` |")
-    if "msedge" in browsers:
-        o, n = int(old_pins["msedge"]["default_major"]), int(new_pins["msedge"]["default_major"])
-        r_old, r_new = int(old_pins["msedge"]["regression_major"]), int(new_pins["msedge"]["regression_major"])
-        new = new.replace(
-            f"{o}.0, {o}.0-min, {r_old}.0, {r_old}.0-min",
-            f"{n}.0, {n}.0-min, {r_new}.0, {r_new}.0-min",
-        )
-        new = new.replace(f"Edge **{o}.0**", f"Edge **{n}.0**")
-        new = new.replace(f"| `msedge` | `{o}.0` |", f"| `msedge` | `{n}.0` |")
-        new = new.replace(f"**msedge {o}.0**", f"**msedge {n}.0**")
-        new = new.replace(f"`qaguru/webdriver-msedge:{o}`", f"`qaguru/webdriver-msedge:{n}`")
-        new = new.replace(f"| Selenium Edge | `msedge` | `{o}.0` |", f"| Selenium Edge | `msedge` | `{n}.0` |")
+    wd_docs = (
+        ("chrome", "Chrome", "Selenium Chrome", "webdriver-chrome"),
+        ("firefox", "Firefox", "Selenium Firefox", "webdriver-firefox"),
+        ("msedge", "Edge", "Selenium Edge", "webdriver-msedge"),
+    )
+    for name, title, selenium, image in wd_docs:
+        if name in browsers:
+            new = _replace_wd_docs(
+                new, name, old_pins, new_pins, title=title, selenium=selenium, image=image
+            )
     if "playwright" in browsers:
         o, n = old_pins["playwright"]["default"], new_pins["playwright"]["default"]
         r_old, r_new = old_pins["playwright"]["regression"], new_pins["playwright"]["regression"]

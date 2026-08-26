@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
-import tempfile
 import time
+import urllib.error
+import urllib.request
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -62,62 +63,26 @@ def log(msg: str) -> None:
 
 
 def http_get(url: str, timeout: int = 45) -> tuple[int, bytes]:
-    with tempfile.NamedTemporaryFile() as tmp:
-        proc = subprocess.run(
-            [
-                "curl",
-                "-sS",
-                "-L",
-                "--max-time",
-                str(timeout),
-                "-A",
-                UA,
-                "-o",
-                tmp.name,
-                "-w",
-                "%{http_code}",
-                url,
-            ],
-            capture_output=True,
-            text=True,
-        )
-        code_s = (proc.stdout or "").strip()
-        try:
-            code = int(code_s)
-        except ValueError:
-            code = 0
-        body = Path(tmp.name).read_bytes()
-        if proc.returncode not in (0, 22) and code == 0:
-            err = (proc.stderr or "").strip()
-            raise RuntimeError(f"curl {url}: rc={proc.returncode} {err}")
-        return code, body
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return int(resp.status), resp.read()
+    except urllib.error.HTTPError as exc:
+        body = exc.read() if exc.fp is not None else b""
+        return int(exc.code), body
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"GET {url}: {exc.reason}") from exc
 
 
 def http_head_ok(url: str, timeout: int = 30) -> bool:
-    proc = subprocess.run(
-        [
-            "curl",
-            "-sS",
-            "-I",
-            "-L",
-            "--max-time",
-            str(timeout),
-            "-A",
-            UA,
-            "-o",
-            "/dev/null",
-            "-w",
-            "%{http_code}",
-            url,
-        ],
-        capture_output=True,
-        text=True,
-    )
+    req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": UA})
     try:
-        code = int((proc.stdout or "").strip())
-    except ValueError:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return 200 <= int(resp.status) < 400
+    except urllib.error.HTTPError as exc:
+        return 200 <= int(exc.code) < 400
+    except urllib.error.URLError:
         return False
-    return 200 <= code < 400
 
 
 def http_json(url: str, timeout: int = 45) -> Any:
@@ -252,110 +217,96 @@ def _pw_hub(version: str) -> list[dict[str, Any]]:
     return images
 
 
-def plan_chrome(pins: dict, upstream: dict, errors: list[str]) -> dict[str, Any] | None:
-    pin = pins["chrome"]
+def _plan_webdriver(
+    browser: str,
+    pins: dict,
+    upstream: dict,
+    errors: list[str],
+    *,
+    artifacts_ok: Callable[[dict[str, Any]], bool],
+    missing_msg: str,
+    extra_new: dict[str, Any] | None = None,
+    on_major: Callable[[dict, int], None] | None = None,
+    patch_note: str = "",
+) -> dict[str, Any] | None:
+    pin = pins[browser]
     pin_def = int(pin["default_major"])
     pin_ver = str(pin["versions"][str(pin_def)])
     up_maj, up_ver = int(upstream["major"]), str(upstream["version"])
     if up_maj < pin_def:
-        log(f"chrome: skip downgrade pin {pin_def} ← upstream {up_maj}")
+        log(f"{browser}: skip downgrade pin {pin_def} ← upstream {up_maj}")
         return None
     if up_maj == pin_def and up_ver == pin_ver:
-        log(f"chrome: pin {pin_def} ({pin_ver}) = CFT Stable — ok")
+        log(f"{browser}: pin {pin_def} ({pin_ver}) matches upstream — ok")
         return None
-    if not chrome_artifacts_ok(up_ver):
-        errors.append(f"chrome: CFT artifacts 404 for {up_ver} (breaking CfT gate)")
+    if not artifacts_ok(upstream):
+        errors.append(missing_msg.format(ver=up_ver, deb=str(upstream.get("deb") or "")))
         return None
+    new_fields: dict[str, Any] = {"major": up_maj, "version": up_ver}
+    if extra_new:
+        new_fields.update(extra_new)
     change: dict[str, Any] = {
-        "browser": "chrome",
+        "browser": browser,
         "old": {"major": pin_def, "version": pin_ver},
-        "new": {"major": up_maj, "version": up_ver},
-        "tags": _wd_tags("chrome", up_maj),
-        "hub_images": _wd_hub("chrome", up_maj),
+        "new": new_fields,
+        "tags": _wd_tags(browser, up_maj),
+        "hub_images": _wd_hub(browser, up_maj),
     }
     if up_maj == pin_def:
         change["kind"] = "patch"
         change["rebuild_existing"] = True
         change["catalog"] = False
-        log(f"chrome: CFT patch {pin_ver} → {up_ver} (rebuild :{up_maj})")
+        suffix = f" {patch_note}" if patch_note else ""
+        log(f"{browser}: patch {pin_ver} → {up_ver} (rebuild :{up_maj}{suffix})")
     else:
+        if on_major:
+            on_major(pin, pin_def)
+        change["kind"] = "major"
+        change["rebuild_existing"] = False
+        change["catalog"] = True
+        log(f"{browser}: major {pin_def} → {up_maj} (regression {pin_def})")
+    return change
+
+
+def plan_chrome(pins: dict, upstream: dict, errors: list[str]) -> dict[str, Any] | None:
+    def on_major(pin: dict, pin_def: int) -> None:
         prev_ver = str(pin["versions"][str(pin_def)])
         if not chrome_artifacts_ok(prev_ver):
             log(f"warn: chrome regression {pin_def} artifacts missing ({prev_ver})")
-        change["kind"] = "major"
-        change["rebuild_existing"] = False
-        change["catalog"] = True
-        log(f"chrome: major {pin_def} → {up_maj} (regression {pin_def})")
-    return change
+
+    return _plan_webdriver(
+        "chrome",
+        pins,
+        upstream,
+        errors,
+        artifacts_ok=lambda up: chrome_artifacts_ok(str(up["version"])),
+        missing_msg="chrome: CFT artifacts 404 for {ver} (breaking CfT gate)",
+        on_major=on_major,
+    )
 
 
 def plan_firefox(pins: dict, upstream: dict, errors: list[str]) -> dict[str, Any] | None:
-    pin = pins["firefox"]
-    pin_def = int(pin["default_major"])
-    pin_ver = str(pin["versions"][str(pin_def)])
-    up_maj, up_ver = int(upstream["major"]), str(upstream["version"])
-    if up_maj < pin_def:
-        log(f"firefox: skip downgrade pin {pin_def} ← upstream {up_maj}")
-        return None
-    if up_maj == pin_def and up_ver == pin_ver:
-        log(f"firefox: pin {pin_def} ({pin_ver}) = latest — ok")
-        return None
-    if not http_head_ok(FF_TARBALL.format(ver=up_ver)):
-        errors.append(f"firefox: FTP tarball missing for {up_ver}")
-        return None
-    change: dict[str, Any] = {
-        "browser": "firefox",
-        "old": {"major": pin_def, "version": pin_ver},
-        "new": {"major": up_maj, "version": up_ver},
-        "tags": _wd_tags("firefox", up_maj),
-        "hub_images": _wd_hub("firefox", up_maj),
-    }
-    if up_maj == pin_def:
-        change["kind"] = "patch"
-        change["rebuild_existing"] = True
-        change["catalog"] = False
-        log(f"firefox: patch {pin_ver} → {up_ver} (rebuild :{up_maj})")
-    else:
-        change["kind"] = "major"
-        change["rebuild_existing"] = False
-        change["catalog"] = True
-        log(f"firefox: major {pin_def} → {up_maj} (regression {pin_def})")
-    return change
+    return _plan_webdriver(
+        "firefox",
+        pins,
+        upstream,
+        errors,
+        artifacts_ok=lambda up: http_head_ok(FF_TARBALL.format(ver=up["version"])),
+        missing_msg="firefox: FTP tarball missing for {ver}",
+    )
 
 
 def plan_msedge(pins: dict, upstream: dict, errors: list[str]) -> dict[str, Any] | None:
-    pin = pins["msedge"]
-    pin_def = int(pin["default_major"])
-    pin_ver = str(pin["versions"][str(pin_def)])
-    up_maj, up_ver = int(upstream["major"]), str(upstream["version"])
-    up_deb = str(upstream["deb"])
-    if up_maj < pin_def:
-        log(f"msedge: skip downgrade pin {pin_def} ← upstream {up_maj}")
-        return None
-    if up_maj == pin_def and up_ver == pin_ver:
-        log(f"msedge: pin {pin_def} ({pin_ver}) = stable amd64 — ok")
-        return None
-    if not edge_artifacts_ok(up_ver, up_deb):
-        errors.append(f"msedge: deb/driver missing for {up_ver} ({up_deb})")
-        return None
-    change: dict[str, Any] = {
-        "browser": "msedge",
-        "old": {"major": pin_def, "version": pin_ver},
-        "new": {"major": up_maj, "version": up_ver, "deb": up_deb},
-        "tags": _wd_tags("msedge", up_maj),
-        "hub_images": _wd_hub("msedge", up_maj),
-    }
-    if up_maj == pin_def:
-        change["kind"] = "patch"
-        change["rebuild_existing"] = True
-        change["catalog"] = False
-        log(f"msedge: patch {pin_ver} → {up_ver} (rebuild :{up_maj}, amd64)")
-    else:
-        change["kind"] = "major"
-        change["rebuild_existing"] = False
-        change["catalog"] = True
-        log(f"msedge: major {pin_def} → {up_maj} (regression {pin_def})")
-    return change
+    return _plan_webdriver(
+        "msedge",
+        pins,
+        upstream,
+        errors,
+        artifacts_ok=lambda up: edge_artifacts_ok(str(up["version"]), str(up["deb"])),
+        missing_msg="msedge: deb/driver missing for {ver} ({deb})",
+        extra_new={"deb": str(upstream["deb"])},
+        patch_note=", amd64",
+    )
 
 
 def plan_playwright(pins: dict, upstream: dict, errors: list[str]) -> dict[str, Any] | None:
