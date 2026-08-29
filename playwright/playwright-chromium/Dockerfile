@@ -2,7 +2,7 @@ ARG PLAYWRIGHT_VERSION=1.62.1
 
 # Static CDP proxy for container port 7070 (hub-HAR / se:cdp / /devtools/<id>/).
 # Cross-compiled on the build host for the target arch (amd64 + arm64), no CGO.
-FROM --platform=$BUILDPLATFORM golang:1.26.5-bookworm AS devtools-proxy
+FROM --platform=$BUILDPLATFORM golang:1.27-bookworm AS devtools-proxy
 ARG TARGETARCH
 WORKDIR /src
 COPY shared/devtools-proxy/ ./

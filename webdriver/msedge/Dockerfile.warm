@@ -6,7 +6,7 @@ RUN apk add --no-cache dumb-init
 
 # Static CDP proxy for container port 7070 (hub-HAR / se:cdp / /devtools/<id>/).
 # msedge images are amd64-only; cross-compile on the build host, no CGO.
-FROM --platform=$BUILDPLATFORM golang:1.26.5-bookworm AS devtools-proxy
+FROM --platform=$BUILDPLATFORM golang:1.27-bookworm AS devtools-proxy
 ARG TARGETARCH
 WORKDIR /src
 COPY shared/devtools-proxy/ ./
