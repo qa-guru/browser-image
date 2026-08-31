@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Rewrite Selenoid browsers.json windows + tests properties from pins.json.
 
-Does not touch android. Sliding window = default + regression (warm + min when
-the file already has -min entries for that browser).
+Does not touch android. Sliding window = default + regression + optional
+compat_majors (warm + min when the file already has -min entries).
 """
 
 from __future__ import annotations
@@ -43,13 +43,21 @@ def _set_image(entry: dict[str, Any], image: str) -> dict[str, Any]:
     return entry
 
 
+def _window_majors(pin: dict[str, Any]) -> list[int]:
+    majors: list[int] = []
+    for raw in (pin["default_major"], pin["regression_major"], *(pin.get("compat_majors") or [])):
+        major = int(raw)
+        if major not in majors:
+            majors.append(major)
+    return majors
+
+
 def rewrite_webdriver(catalog: dict[str, Any], pins: dict, browsers: set[str]) -> None:
     for name in WD_BROWSERS:
         if name not in browsers or name not in catalog:
             continue
         pin = pins[name]
         default_maj = int(pin["default_major"])
-        regression_maj = int(pin["regression_major"])
         block = catalog[name]
         versions = block.get("versions") or {}
         warm_t = _template_for(versions, "")
@@ -57,7 +65,7 @@ def rewrite_webdriver(catalog: dict[str, Any], pins: dict, browsers: set[str]) -
         if warm_t is None:
             raise SystemExit(f"{name}: no warm template in catalog")
         new_versions: dict[str, Any] = {}
-        for major in (default_maj, regression_maj):
+        for major in _window_majors(pin):
             key = f"{major}.0"
             image = f"qaguru/webdriver-{name}:{major}"
             new_versions[key] = _set_image(deepcopy(warm_t), image)
@@ -348,6 +356,17 @@ def cmd_self_check() -> int:
     check("chrome default 153", catalog["chrome"]["default"] == "153.0")
     check("dropped 151", "151.0" not in catalog["chrome"]["versions"])
     check("kept 152", "152.0" in catalog["chrome"]["versions"])
+    pins["chrome"]["compat_majors"] = [148]
+    catalog["chrome"]["versions"] = {
+        "153.0": {"image": "qaguru/webdriver-chrome:153", "port": "4444"},
+        "153.0-min": {"image": "qaguru/webdriver-chrome:153-min", "port": "4444"},
+        "152.0": {"image": "qaguru/webdriver-chrome:152", "port": "4444"},
+        "152.0-min": {"image": "qaguru/webdriver-chrome:152-min", "port": "4444"},
+    }
+    rewrite_webdriver(catalog, pins, {"chrome"})
+    check("compat 148 kept", "148.0" in catalog["chrome"]["versions"])
+    check("compat 148-min kept", "148.0-min" in catalog["chrome"]["versions"])
+    check("compat still drops 151", "151.0" not in catalog["chrome"]["versions"])
     check("android untouched", catalog["android"]["default"] == "16.0")
     check("pw default", catalog["playwright-chromium"]["default"] == "1.63.0")
     check("pw min", "1.63.0-min" in catalog["playwright-chromium"]["versions"])

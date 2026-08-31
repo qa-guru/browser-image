@@ -2,6 +2,7 @@
   "chrome": {
     "default_major": 152,
     "regression_major": 151,
+    "compat_majors": [148],
     "versions": {
       "152": "152.0.7977.64",
       "151": "151.0.7922.138"
