@@ -32,8 +32,8 @@
     }
   },
   "playwright": {
-    "default": "1.62.1",
-    "regression": "1.61.1",
+    "default": "1.63.0",
+    "regression": "1.62.1",
     "mcr_distro": "noble"
   }
 }
