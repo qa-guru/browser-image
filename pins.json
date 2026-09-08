@@ -1,13 +1,13 @@
 {
   "chrome": {
-    "default_major": 152,
-    "regression_major": 151,
+    "default_major": 153,
+    "regression_major": 152,
     "compat_majors": [
       148
     ],
     "versions": {
-      "152": "152.0.7977.82",
-      "151": "151.0.7922.138"
+      "153": "153.0.8010.36",
+      "152": "152.0.7977.82"
     }
   },
   "firefox": {
