@@ -11,12 +11,12 @@
     }
   },
   "firefox": {
-    "default_major": 155,
-    "regression_major": 154,
+    "default_major": 156,
+    "regression_major": 155,
     "geckodriver": "0.37.1",
     "versions": {
-      "155": "155.0.1",
-      "154": "154.0.1"
+      "156": "156.0",
+      "155": "155.0.1"
     }
   },
   "msedge": {
