@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLAN="${1:?plan.json}"
+PLAN="$(cd "$(dirname "${1:?plan.json}")" && pwd)/$(basename "$1")"
 TOKEN="${CATALOG_TOKEN:?CATALOG_TOKEN PAT with contents:write on catalog repos}"
 WORKDIR="${CATALOG_WORKDIR:-${RUNNER_TEMP:-/tmp}/browser-image-catalog}"
 PY="${ROOT}/scripts/update_catalog.py"
