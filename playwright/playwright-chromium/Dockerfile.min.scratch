@@ -41,8 +41,17 @@ RUN mkdir -p /ms-playwright /ms-playwright-agent /opt/playwright \
     && chmod -R 777 /ms-playwright
 
 COPY --from=init /usr/bin/dumb-init /usr/bin/dumb-init
-COPY shared/server.cjs shared/screen-resolution.cjs shared/headed-window.cjs shared/entrypoint-min.sh /opt/playwright/
-RUN chmod +x /opt/playwright/entrypoint-min.sh
+COPY shared/server.cjs shared/screen-resolution.cjs shared/headed-window.cjs shared/entrypoint-min.sh shared/chromium-wrapper.sh /opt/playwright/
+RUN chmod +x /opt/playwright/entrypoint-min.sh /opt/playwright/chromium-wrapper.sh
+
+# Wrap Chromium-family binaries: merge grid --disable-features (see shared/chromium-wrapper.sh).
+RUN set -eu; for f in \
+        /ms-playwright/*/chrome-linux64/chrome \
+        /ms-playwright/*/chrome-headless-shell-linux64/chrome-headless-shell \
+        /opt/google/chrome/chrome \
+        /opt/microsoft/msedge/msedge; do \
+      if [ -f "$f" ]; then mv "$f" "$f.real" && install -m 0755 /opt/playwright/chromium-wrapper.sh "$f"; fi; \
+    done
 
 USER pwuser
 WORKDIR /home/pwuser

@@ -43,8 +43,17 @@ RUN mkdir -p /opt/playwright /tmp/.X11-unix \
     && chmod 1777 /tmp/.X11-unix
 
 COPY --from=devtools-proxy /devtools-proxy /usr/local/bin/devtools-proxy
-COPY shared/common.sh shared/entrypoint.sh shared/server.cjs shared/screen-resolution.cjs shared/headed-window.cjs shared/fluxbox.apps shared/launch-headed-browser.js /opt/playwright/
-RUN chmod +x /opt/playwright/entrypoint.sh
+COPY shared/common.sh shared/entrypoint.sh shared/server.cjs shared/screen-resolution.cjs shared/headed-window.cjs shared/fluxbox.apps shared/launch-headed-browser.js shared/chromium-wrapper.sh /opt/playwright/
+RUN chmod +x /opt/playwright/entrypoint.sh /opt/playwright/chromium-wrapper.sh
+
+# Wrap Chromium-family binaries: merge grid --disable-features (see shared/chromium-wrapper.sh).
+RUN set -eu; for f in \
+        /ms-playwright/*/chrome-linux64/chrome \
+        /ms-playwright/*/chrome-headless-shell-linux64/chrome-headless-shell \
+        /opt/google/chrome/chrome \
+        /opt/microsoft/msedge/msedge; do \
+      if [ -f "$f" ]; then mv "$f" "$f.real" && install -m 0755 /opt/playwright/chromium-wrapper.sh "$f"; fi; \
+    done
 
 USER pwuser
 WORKDIR /home/pwuser
